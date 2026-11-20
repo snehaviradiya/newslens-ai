@@ -1,0 +1,23 @@
+{
+  "expo": {
+    "name": "NewsLens AI",
+    "slug": "newslens-ai",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "backgroundColor": "#0F172A"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.newslens.ai"
+    },
+    "android": {
+      "package": "com.newslens.ai"
+    },
+    "plugins": [
+      "expo-font",
+      "expo-asset"
+    ]
+  }
+}
