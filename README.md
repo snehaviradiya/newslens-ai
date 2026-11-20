@@ -71,7 +71,7 @@ Conventional media bias rating systems assign static political labels (e.g., "Le
 | **AI / NLP Engine** | Python 3.10+, FastAPI, Hugging Face Transformers | High-performance machine learning pipelines for NER, sentiment, and framing classification. |
 | **News Collection** | RSS / Atom feeds, News APIs | Multi-source automated ingestion with rate limiting and deduplication. |
 | **Authentication** | JWT (JSON Web Tokens), bcrypt | Secure, stateless authentication for user profiles and history. |
-| **Version Control** | Git, GitHub | Strict branch hygiene directly on `main` with reproducible commit history. |
+| **Version Control** | Git, GitHub | Strict branch hygiene directly on `main` with 4–9 incremental, verified commits per development day. |
 
 ---
 

@@ -134,3 +134,23 @@ The project follows a disciplined day-by-day development schedule. Each day is d
   - Android APK generated, verified, and ready for presentation.
   - Repository cleanly synchronized with origin/main.
   - Academic submission deliverables fully finalized.
+
+---
+
+## 3. Git Workflow & Incremental Commit Policy
+
+To ensure high-resolution academic traceability, development must never be batched into a single monolithic end-of-day commit. Development follows a continuous incremental commit model:
+
+1. **Commit Frequency:** 4–9 meaningful, granular commits per day corresponding to actual completed milestones.
+2. **Immediate Checkpoint Rule:** Whenever an independent component, service, screen, data model, test suite, or documentation block is implemented and verified, commit it immediately.
+3. **Branch Model:** All work is committed directly to the `main` branch. No PRs or unnecessary branches.
+4. **Regular Remote Synchronization:** Push verified commits to `origin/main` continuously throughout each development day.
+5. **Pre-Commit Verification:** Run relevant validations (typecheck, lint, unit tests, bundle checks) and inspect `git status` and `git diff` before creating each commit.
+6. **No Artificial Commits:** Every commit must reflect genuine, functioning, verified work. Never backdate timestamps, fabricate activity, or commit broken code.
+7. **Conventional Commit Standard:** Use structured conventional commit messages:
+   - `feat(...)`: Functional feature or screen additions.
+   - `fix(...)`: Bug fixes and error resolutions.
+   - `test(...)`: Test additions and verification suites.
+   - `docs(...)`: Documentation updates and architecture specifications.
+   - `refactor(...)`: Code cleanup and structural improvements without behavioral change.
+   - `chore(...)`: Dependency updates, tooling, and build configuration.
