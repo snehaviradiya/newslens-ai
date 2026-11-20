@@ -7,6 +7,9 @@ import { env } from './config/env.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import healthRoutes from './routes/healthRoutes.js';
 import authRoutes from './routes/authRoutes.js';
+import sourceRoutes from './routes/sourceRoutes.js';
+import articleRoutes from './routes/articleRoutes.js';
+import eventRoutes from './routes/eventRoutes.js';
 
 export const createApp = (): Express => {
   const app = express();
@@ -33,6 +36,9 @@ export const createApp = (): Express => {
 
   // API v1 Routes
   app.use('/api/v1/auth', authRoutes);
+  app.use('/api/v1/sources', sourceRoutes);
+  app.use('/api/v1/articles', articleRoutes);
+  app.use('/api/v1/events', eventRoutes);
 
   // 404 Route Catch-All
   app.use((req: Request, res: Response) => {
