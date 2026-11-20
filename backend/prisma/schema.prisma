@@ -1,0 +1,172 @@
+// NewsLens AI — Prisma Database Schema for PostgreSQL
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  USER
+  RESEARCHER
+  ADMIN
+}
+
+enum AnalysisStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum ToneCategory {
+  NEUTRAL
+  CRITICAL
+  ADVOCATING
+  ALARMIST
+  BALANCED
+}
+
+model User {
+  id           String            @id @default(uuid())
+  name         String
+  email        String            @unique
+  passwordHash String
+  role         Role              @default(USER)
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  comparisons  ArticleComparison[]
+  history      AnalysisHistory[]
+
+  @@index([email])
+}
+
+model NewsSource {
+  id          String        @id @default(uuid())
+  name        String
+  websiteUrl  String        @unique
+  rssFeedUrl  String?
+  description String?
+  country     String?       @default("International")
+  category    String?       @default("General")
+  isActive    Boolean       @default(true)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  articles    NewsArticle[]
+
+  @@index([websiteUrl])
+}
+
+model NewsEvent {
+  id          String              @id @default(uuid())
+  title       String
+  description String?
+  category    String              @default("General")
+  eventDate   DateTime            @default(now())
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  articles    NewsArticle[]
+  comparisons ArticleComparison[]
+
+  @@index([eventDate])
+}
+
+model NewsArticle {
+  id           String              @id @default(uuid())
+  headline     String
+  originalUrl  String              @unique
+  author       String?
+  content      String?             @db.Text
+  summary      String?             @db.Text
+  publishedAt  DateTime            @default(now())
+  sourceId     String
+  eventId      String?
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+
+  source       NewsSource          @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  event        NewsEvent?          @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  analyses     ArticleAnalysis[]
+  
+  comparisonsAsA ArticleComparison[] @relation("ArticleA")
+  comparisonsAsB ArticleComparison[] @relation("ArticleB")
+  historyItems   AnalysisHistory[]
+
+  @@index([originalUrl])
+  @@index([publishedAt])
+  @@index([sourceId])
+  @@index([eventId])
+}
+
+model ArticleAnalysis {
+  id                     String         @id @default(uuid())
+  articleId              String
+  modelVersion           String         @default("1.0.0")
+  status                 AnalysisStatus @default(COMPLETED)
+  headlineSentiment      Float          @default(0.0) // -1.0 to 1.0
+  headlineSensationalism Float          @default(0.0) // 0.0 to 1.0
+  overallTone            ToneCategory   @default(NEUTRAL)
+  subjectivityScore      Float          @default(0.0) // 0.0 (Objective) to 1.0 (Subjective)
+  framingScores          Json           // { conflict, economic, humanInterest, morality, responsibility }
+  entities               Json?          // Array of { name, type, mentionCount, stance }
+  quotes                 Json?          // Array of { speaker, quote, affiliation }
+  topics                 Json?          // Array of { topic, score }
+  politicalSignals       Json?          // Observable article-level signals & cited framing cues
+  supportingEvidence     Json?          // Verbatim paragraph citations supporting the analysis
+  metadata               Json?          // Computation latency, model checkpoint
+  createdAt              DateTime       @default(now())
+  updatedAt              DateTime       @updatedAt
+
+  article                NewsArticle    @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@index([articleId])
+  @@index([status])
+}
+
+model ArticleComparison {
+  id                   String        @id @default(uuid())
+  eventId              String?
+  articleAId           String
+  articleBId           String
+  userId               String?
+  headlineComparison   Json?         // Comparative headline evaluation
+  framingContrast      Json?         // Dimensional divergence between A and B
+  quoteComparison      Json?         // Quoted stakeholder overlap & uniqueness
+  coverageOverlap      Float         @default(0.0) // 0.0 to 1.0
+  keyDivergencePoints  Json?         // Array of key narrative divergence statements
+  synthesisSummary     String?       @db.Text
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+
+  event                NewsEvent?    @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  articleA             NewsArticle   @relation("ArticleA", fields: [articleAId], references: [id], onDelete: Cascade)
+  articleB             NewsArticle   @relation("ArticleB", fields: [articleBId], references: [id], onDelete: Cascade)
+  user                 User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  historyItems         AnalysisHistory[]
+
+  @@unique([articleAId, articleBId])
+  @@index([eventId])
+  @@index([userId])
+}
+
+model AnalysisHistory {
+  id           String             @id @default(uuid())
+  userId       String
+  articleId    String?
+  comparisonId String?
+  isBookmarked Boolean            @default(false)
+  createdAt    DateTime           @default(now())
+
+  user         User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  article      NewsArticle?       @relation(fields: [articleId], references: [id], onDelete: SetNull)
+  comparison   ArticleComparison? @relation(fields: [comparisonId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([createdAt])
+}
