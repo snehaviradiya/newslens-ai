@@ -6,6 +6,7 @@ import helmet from 'helmet';
 import { env } from './config/env.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import healthRoutes from './routes/healthRoutes.js';
+import authRoutes from './routes/authRoutes.js';
 
 export const createApp = (): Express => {
   const app = express();
@@ -29,6 +30,9 @@ export const createApp = (): Express => {
 
   // Root & Health Routes
   app.use('/', healthRoutes);
+
+  // API v1 Routes
+  app.use('/api/v1/auth', authRoutes);
 
   // 404 Route Catch-All
   app.use((req: Request, res: Response) => {
