@@ -55,6 +55,15 @@ All requests and responses use `application/json` content type unless specified 
   - **Query Params:** `articleA=<id>&articleB=<id>`
   - **Description:** Retrieve or dynamically generate comparative framing analysis between two articles.
 
+### 2.6 Analysis, Comparison, and History Endpoints
+- `GET /api/v1/analyses` — Paginated stored analysis records.
+- `GET /api/v1/analyses/:id` — One stored article analysis.
+- `GET /api/v1/comparisons` — Paginated stored comparisons.
+- `GET /api/v1/comparisons/:id` — One stored comparison.
+- `GET /api/v1/history` — Authenticated user's analysis/comparison history.
+
+Collection endpoints use `page` and `limit` query parameters. Data that has not been collected or analyzed is not fabricated.
+
 ---
 
 ## 3. AI & NLP Engine API (Internal Microservice)

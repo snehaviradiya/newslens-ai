@@ -6,6 +6,64 @@ The `backend/` module provides the core RESTful application server for NewsLens 
 
 It is responsible for client authentication, ingestion scheduling, data persistence, event clustering orchestration, and coordinating analysis requests with the dedicated AI/NLP Engine.
 
+## Day 3 Implementation Status
+
+The backend foundation is implemented and tested. PostgreSQL-backed routes are available; live database data is required for auth and news records. No mock articles, sources, analyses, or comparisons are returned by the API.
+
+The article analysis endpoint currently returns `501 NOT_IMPLEMENTED` until the Day 5 AI/NLP engine is connected.
+
+## Setup
+
+```sh
+cd backend
+npm install
+cp .env.example .env
+npx prisma generate
+npx prisma migrate deploy
+npm run dev
+```
+
+Set `DATABASE_URL` to a valid PostgreSQL instance and `JWT_SECRET` to a secret of at least 32 characters.
+
+## Verification
+
+```sh
+npm test
+npm run build
+npm run prisma:validate
+npm run prisma:migrate:deploy
+```
+
+## API Routes
+
+- `GET /health`
+- `GET /api/v1`
+- `POST /api/v1/auth/register`
+- `POST /api/v1/auth/login`
+- `GET /api/v1/auth/me`
+- `GET /api/v1/sources`
+- `GET /api/v1/sources/:id`
+- `GET /api/v1/articles`
+- `GET /api/v1/articles/:id`
+- `POST /api/v1/articles/analyze` — returns `501` until the AI engine exists
+- `GET /api/v1/events`
+- `GET /api/v1/events/:id`
+- `GET /api/v1/analyses`
+- `GET /api/v1/analyses/:id`
+- `GET /api/v1/comparisons`
+- `GET /api/v1/comparisons/:id`
+- `GET /api/v1/history` — protected by a bearer token
+
+## Mobile Connection
+
+Set `EXPO_PUBLIC_API_BASE_URL` in `mobile/.env`:
+
+- iOS simulator: `http://localhost:3000`
+- Android emulator: `http://10.0.2.2:3000`
+- Physical device: `http://<development-machine-LAN-IP>:3000`
+
+Use `CORS_ORIGIN` to allow the exact Expo origin in development; do not use unrestricted production CORS.
+
 ## Planned Technology Stack
 
 - **Runtime & Framework:** Node.js, Express.js

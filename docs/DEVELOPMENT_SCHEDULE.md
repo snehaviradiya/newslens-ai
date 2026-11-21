@@ -54,8 +54,9 @@ The project follows a disciplined day-by-day development schedule. Each day is d
   - Create REST API routing under `/api/v1` for users, articles, events, and comparisons.
   - Implement centralized error handling, CORS, and request validation.
 - **Verification:**
-  - Prisma schema validation passes (`npx prisma validate`).
-  - Unit/integration tests for auth endpoints and health routes pass.
+  - Prisma schema validation passes (`npx prisma validate`) — completed.
+  - Unit/integration tests for auth, news, analysis, and health routes pass — completed with mocked database operations.
+  - Initial migration SQL generated; live PostgreSQL migration remains environment-dependent.
 
 ---
 

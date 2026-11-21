@@ -87,7 +87,7 @@ newslens-ai/
 │   ├── screens/                # Core screens (Welcome, Login, Home, Analyze, Compare, etc.)
 │   ├── services/               # Centralized API service and health diagnostics
 │   └── types/                  # Strict TypeScript domain models and route params
-├── backend/                    # Express.js REST API and Prisma database layer (Scheduled: 21 Nov)
+├── backend/                    # Express.js REST API and Prisma database layer (Backend foundation completed: 21 Nov)
 ├── ai-engine/                  # Python FastAPI NLP & framing analysis microservice (Scheduled: 23 Nov)
 ├── docs/                       # Architecture, requirements, database design, and schedule documentation
 │   ├── REQUIREMENTS.md         # Detailed system requirements and framing methodology
@@ -110,7 +110,7 @@ The project strictly follows an 8-day development timeline from **19 November 20
 |---|---|---|---|
 | **19 Nov 2026** | **Repository Cleanup & Architecture Baseline** | Safe cleanup, baseline project structure, requirements analysis, technical architecture, and documentation. | **Completed** |
 | **20 Nov 2026** | **Mobile Application Foundation** | Expo setup, TypeScript config, React Navigation, design tokens, and core screen scaffolding. | **Completed** |
-| **21 Nov 2026** | **Backend Architecture & Database Setup** | Express REST server, PostgreSQL schema, Prisma ORM, and JWT authentication. | Planned |
+| **21 Nov 2026** | **Backend Architecture & Database Setup** | Express REST server, PostgreSQL schema, Prisma ORM, and JWT authentication. | Completed |
 | **22 Nov 2026** | **News Collection & Ingestion Pipeline** | RSS feed parsers, news API integrations, text extraction, and deduplication. | Planned |
 | **23 Nov 2026** | **AI/NLP Engine & Framing Analysis** | FastAPI service, text preprocessing, NER, sentiment, framing classification, and evidence citations. | Planned |
 | **24 Nov 2026** | **Related-Event Detection & Comparisons** | Semantic article clustering, event grouping, and cross-source comparative analysis. | Planned |

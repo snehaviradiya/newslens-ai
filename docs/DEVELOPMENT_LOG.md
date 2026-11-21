@@ -82,3 +82,31 @@ Construct a fully functional, professional React Native / Expo mobile applicatio
 - Day 4 (22 Nov): Ingest live multi-source RSS feeds into database to replace mock event lists.
 - Day 5 (23 Nov): Connect analysis screen to Python FastAPI AI engine for live Hugging Face transformer inference.
 - Day 6 (24 Nov): Wire automated cross-source event clustering and divergence matching.
+
+---
+
+## Day 3: 21 November 2026 — Backend Architecture, APIs, Auth & Database Setup
+
+### Completed Work
+- Restored and completed the Express/TypeScript backend foundation.
+- Added Prisma PostgreSQL models for users, sources, articles, events, analyses, comparisons, and history.
+- Generated an initial migration SQL script under `backend/prisma/migrations/`.
+- Implemented secure JWT registration/login/profile routes with bcrypt password hashing and Zod validation.
+- Removed in-memory authentication and fabricated source/article/event fallbacks.
+- Implemented database-backed paginated source, article, and event routes.
+- Added read-only analysis and comparison routes plus authenticated, user-owned history routing.
+- Changed live article analysis submission to an honest `501 NOT_IMPLEMENTED` response until the AI engine exists.
+- Added centralized validation, application, JSON, 404, and authentication error handling.
+- Added mocked integration tests for auth, news, analyses, comparisons, history, health, and 404 behavior.
+
+### Verification
+- `npm test -- --runInBand`: 4 suites passed, 24 tests passed.
+- `npm run build`: passed.
+- `npm run prisma:validate`: passed.
+- Mobile `npm run typecheck`: passed.
+- `git diff --check`: passed.
+
+### Database Status
+- Prisma schema and migration SQL are prepared.
+- A valid PostgreSQL instance was not available in the local environment, so migrations and database integration were not executed against a live server.
+- API routes return `503` for database operations when PostgreSQL is unavailable; they do not fabricate data.
