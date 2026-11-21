@@ -39,45 +39,13 @@ export const articleController = {
   // POST /api/v1/articles/analyze
   analyzeArticle: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const payload = analyzeArticleInputSchema.parse(req.body);
-
-      // Return structured framing evaluation
-      // Note: Live model pipeline scheduled for Day 5 (23 Nov)
-      const simulatedAnalysis = {
-        id: `ana-${Date.now()}`,
-        articleId: 'art-custom',
-        articleTitle: payload.url
-          ? `Analysis of ${payload.url.replace(/^https?:\/\//, '').slice(0, 45)}...`
-          : 'Submitted Article Text Analysis',
-        sourceName: payload.url?.includes('reuters') ? 'Reuters' : payload.url?.includes('guardian') ? 'The Guardian' : 'Independent Source',
-        analyzedAt: new Date().toISOString(),
-        headlineSentiment: 0.12,
-        headlineSensationalism: 0.18,
-        overallTone: 'Neutral',
-        subjectivityScore: 0.28,
-        framingScores: {
-          conflict: 0.35,
-          economic: 0.68,
-          humanInterest: 0.22,
-          morality: 0.15,
-          responsibility: 0.48,
+      analyzeArticleInputSchema.parse(req.body);
+      res.status(501).json({
+        success: false,
+        error: {
+          code: 'NOT_IMPLEMENTED',
+          message: 'Article analysis requires the Day 5 AI/NLP engine, which is not connected yet.',
         },
-        entities: [
-          { name: 'Regulatory Authority', type: 'ORG', mentionCount: 3, stance: 'Neutral' },
-        ],
-        quotes: [
-          { speaker: 'Policy Representative', quote: 'Implementation standards remain under evaluation.' },
-        ],
-        supportingEvidence: [
-          { frame: 'economic', excerpt: 'Capital expenditure requirements were estimated at $450M.' },
-        ],
-        isDemo: true,
-      };
-
-      res.status(200).json({
-        success: true,
-        message: 'Article framing analysis processed.',
-        data: simulatedAnalysis,
       });
     } catch (error) {
       next(error);

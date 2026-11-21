@@ -9,10 +9,14 @@ dotenv.config();
 const envSchema = z.object({
   PORT: z.string().default('3000').transform((val) => parseInt(val, 10)),
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
-  CORS_ORIGIN: z.string().default('*'),
-  JWT_SECRET: z.string().default('newslens-super-secret-jwt-key-2026-academic-research'),
+  CORS_ORIGIN: z.string().default('http://localhost:8081,http://localhost:19006'),
+  JWT_SECRET: z.string().default(
+    process.env.NODE_ENV === 'test'
+      ? 'test-only-secret-at-least-32-characters'
+      : 'development-only-secret-change-before-production'
+  ),
   JWT_EXPIRES_IN: z.string().default('7d'),
-  DATABASE_URL: z.string().default('postgresql://localhost:5432/newslens?schema=public'),
+  DATABASE_URL: z.string().optional(),
   AI_ENGINE_URL: z.string().default('http://localhost:8000'),
 });
 
@@ -24,3 +28,11 @@ if (!parsed.success) {
 }
 
 export const env = parsed.data;
+
+if (
+  env.NODE_ENV === 'production' &&
+  (env.JWT_SECRET.length < 32 || env.JWT_SECRET.startsWith('development-only'))
+) {
+  console.error('JWT_SECRET must be configured with at least 32 characters in production.');
+  process.exit(1);
+}
