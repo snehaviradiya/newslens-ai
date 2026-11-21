@@ -3,6 +3,48 @@
 import request from 'supertest';
 import { createApp } from '../src/app';
 
+jest.mock('../src/utils/prisma.js', () => {
+  const sources = [{
+    id: 'src-1', name: 'BBC News', websiteUrl: 'https://bbc.com/news',
+    rssFeedUrl: 'https://feeds.bbci.co.uk/news/rss.xml', description: 'Public service broadcaster',
+    country: 'UK', category: 'General', isActive: true, createdAt: new Date(), updatedAt: new Date(),
+  }];
+  const articles = [{
+    id: 'art-1', headline: 'Climate agreement', originalUrl: 'https://example.com/article',
+    author: 'Test Author', content: 'Test content', summary: 'Test summary',
+    publishedAt: new Date(), sourceId: 'src-1', eventId: 'evt-1',
+    createdAt: new Date(), updatedAt: new Date(), source: sources[0], event: null, analyses: [],
+  }];
+  const events = [{
+    id: 'evt-1', title: 'Climate Summit', description: 'Test event',
+    category: 'Environment', eventDate: new Date(), createdAt: new Date(), updatedAt: new Date(),
+    articles: [{ ...articles[0], source: sources[0] }],
+  }];
+
+  return {
+    prisma: {
+      newsSource: {
+        findMany: jest.fn(async () => sources),
+        count: jest.fn(async () => sources.length),
+        findUnique: jest.fn(async ({ where }: any) =>
+          sources.find((source) => source.id === where.id) || null),
+      },
+      newsEvent: {
+        findMany: jest.fn(async () => events),
+        count: jest.fn(async () => events.length),
+        findUnique: jest.fn(async ({ where }: any) =>
+          events.find((event) => event.id === where.id) || null),
+      },
+      newsArticle: {
+        findMany: jest.fn(async () => articles),
+        count: jest.fn(async () => articles.length),
+        findUnique: jest.fn(async ({ where }: any) =>
+          articles.find((article) => article.id === where.id) || null),
+      },
+    },
+  };
+});
+
 describe('News Domain API Endpoints (/api/v1)', () => {
   const app = createApp();
 
@@ -65,15 +107,14 @@ describe('News Domain API Endpoints (/api/v1)', () => {
       expect(res.body.data.id).toBe('art-1');
     });
 
-    it('POST /api/v1/articles/analyze should accept article URL and return framing analysis', async () => {
+    it('POST /api/v1/articles/analyze should return an honest not-connected response', async () => {
       const res = await request(app)
         .post('/api/v1/articles/analyze')
         .send({ url: 'https://reuters.com/world/climate-pact-agreement' });
 
-      expect(res.status).toBe(200);
-      expect(res.body.success).toBe(true);
-      expect(res.body.data.framingScores).toBeDefined();
-      expect(res.body.data.framingScores.economic).toBeGreaterThan(0);
+      expect(res.status).toBe(501);
+      expect(res.body.success).toBe(false);
+      expect(res.body.error.code).toBe('NOT_IMPLEMENTED');
     });
 
     it('POST /api/v1/articles/analyze should reject empty payload with 400', async () => {

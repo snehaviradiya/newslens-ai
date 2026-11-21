@@ -3,6 +3,31 @@
 import request from 'supertest';
 import { createApp } from '../src/app';
 
+const mockUsers = new Map<string, any>();
+
+jest.mock('../src/utils/prisma.js', () => ({
+  prisma: {
+    user: {
+      findUnique: jest.fn(async ({ where }: any) => {
+        if (where.email) return mockUsers.get(where.email) || null;
+        return Array.from(mockUsers.values()).find((user) => user.id === where.id) || null;
+      }),
+      create: jest.fn(async ({ data }: any) => {
+        const user = {
+          id: `usr-${mockUsers.size + 1}`,
+          name: data.name,
+          email: data.email,
+          passwordHash: data.passwordHash,
+          role: data.role,
+          createdAt: new Date(),
+        };
+        mockUsers.set(user.email, user);
+        return user;
+      }),
+    },
+  },
+}));
+
 describe('Authentication API Endpoints (/api/v1/auth)', () => {
   const app = createApp();
   const testUser = {
