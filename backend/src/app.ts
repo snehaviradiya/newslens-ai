@@ -13,6 +13,7 @@ import eventRoutes from './routes/eventRoutes.js';
 import analysisRoutes from './routes/analysisRoutes.js';
 import comparisonRoutes from './routes/comparisonRoutes.js';
 import historyRoutes from './routes/historyRoutes.js';
+import collectionRoutes from './routes/collectionRoutes.js';
 
 export const createApp = (): Express => {
   const app = express();
@@ -45,6 +46,7 @@ export const createApp = (): Express => {
   app.use('/api/v1/analyses', analysisRoutes);
   app.use('/api/v1/comparisons', comparisonRoutes);
   app.use('/api/v1/history', historyRoutes);
+  app.use('/api/v1/collection', collectionRoutes);
 
   // 404 Route Catch-All
   app.use((req: Request, res: Response) => {

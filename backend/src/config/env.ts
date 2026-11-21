@@ -18,6 +18,16 @@ const envSchema = z.object({
   JWT_EXPIRES_IN: z.string().default('7d'),
   DATABASE_URL: z.string().optional(),
   AI_ENGINE_URL: z.string().default('http://localhost:8000'),
+  ENABLE_COLLECTION_SCHEDULER: z
+    .string()
+    .optional()
+    .default('false')
+    .transform((val) => val === 'true'),
+  COLLECTION_INTERVAL_MINUTES: z
+    .string()
+    .optional()
+    .default('60')
+    .transform((val) => parseInt(val, 10) || 60),
 });
 
 const parsed = envSchema.safeParse(process.env);
