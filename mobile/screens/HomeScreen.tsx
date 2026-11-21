@@ -9,7 +9,7 @@ import { ArticleCard } from '../components/ArticleCard';
 import { NewsSourceCard } from '../components/NewsSourceCard';
 import { COLORS, RADIUS, SHADOWS, SPACING, TYPOGRAPHY } from '../constants/theme';
 import { MOCK_ANALYSES, MOCK_ARTICLES, MOCK_EVENTS, MOCK_SOURCES } from '../constants/mockData';
-import { NewsEvent, NewsSource } from '../types/models';
+import { NewsArticle, NewsEvent, NewsSource } from '../types/models';
 import { MainTabParamList, RootStackParamList } from '../types/navigation';
 import { api } from '../services/api';
 
@@ -23,6 +23,7 @@ type Props = {
 export const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const [events, setEvents] = useState<NewsEvent[]>(MOCK_EVENTS);
   const [sources, setSources] = useState<NewsSource[]>(MOCK_SOURCES);
+  const [articles, setArticles] = useState<NewsArticle[]>(MOCK_ARTICLES);
   const [refreshing, setRefreshing] = useState(false);
   const [isBackendConnected, setIsBackendConnected] = useState(false);
 
@@ -35,6 +36,9 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
     const sourceResult = await api.getSources();
     setSources(sourceResult.data);
+
+    const articleResult = await api.getArticles({ limit: 6 });
+    setArticles(articleResult.data);
   };
 
   useEffect(() => {
@@ -150,16 +154,22 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
         {/* Recent Analyzed Articles Section */}
         <View style={[styles.sectionHeader, { marginTop: SPACING.xl }]}>
           <Text style={styles.sectionTitle}>Recent Article Inspections</Text>
-          <Text style={styles.sectionMeta}>Evidence-grounded linguistic analysis examples</Text>
+          <Text style={styles.sectionMeta}>
+            {isBackendConnected ? 'Ingested multi-source news coverage' : 'Evidence-grounded linguistic analysis examples'}
+          </Text>
         </View>
-        {MOCK_ARTICLES.map((article, index) => (
-          <ArticleCard
-            key={article.id}
-            article={article}
-            onPress={() => navigation.navigate('ArticleDetail', { article, analysis: MOCK_ANALYSES[index] })}
-            onAnalyzePress={() => navigation.navigate('ArticleDetail', { article, analysis: MOCK_ANALYSES[index] })}
-          />
-        ))}
+        {articles.length === 0 ? (
+          <Text style={styles.sourcesLabel}>No ingested articles available.</Text>
+        ) : (
+          articles.map((article, index) => (
+            <ArticleCard
+              key={article.id}
+              article={article}
+              onPress={() => navigation.navigate('ArticleDetail', { article, analysis: MOCK_ANALYSES[index % MOCK_ANALYSES.length] })}
+              onAnalyzePress={() => navigation.navigate('ArticleDetail', { article, analysis: MOCK_ANALYSES[index % MOCK_ANALYSES.length] })}
+            />
+          ))
+        )}
       </ScrollView>
     </SafeAreaView>
   );

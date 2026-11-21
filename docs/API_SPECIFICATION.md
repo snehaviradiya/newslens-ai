@@ -42,20 +42,39 @@ All requests and responses use `application/json` content type unless specified 
 - **`GET /api/v1/events/:id`**
   - **Description:** Retrieve an event cluster, member articles, and source distribution.
 
-### 2.4 Articles & Analysis Endpoints
+### 2.5 News Sources Management Endpoints
+- **`GET /api/v1/sources`**
+  - **Query Params:** `category`, `country`, `isActive`, `page`, `limit`
+  - **Description:** Retrieve paginated configured news sources with monitored article counts.
+- **`GET /api/v1/sources/:id`**
+  - **Description:** Retrieve details for a specific news source.
+- **`POST /api/v1/sources`** (Protected: Researcher/Admin)
+  - **Body:** `{ "name": "...", "websiteUrl": "https://...", "rssFeedUrl": "https://...", "description": "...", "country": "...", "category": "..." }`
+  - **Description:** Add a new verified news source and feed configuration.
+- **`PATCH /api/v1/sources/:id`** (Protected: Researcher/Admin)
+  - **Description:** Update source metadata, feed URL, or active status.
+- **`POST /api/v1/sources/validate-feed`**
+  - **Body:** `{ "feedUrl": "https://feeds.bbci.co.uk/news/rss.xml" }`
+  - **Description:** Tests if a given URL is a valid, parseable RSS/Atom feed and returns feed title and item count.
+
+### 2.6 News Articles Endpoints
+- **`GET /api/v1/articles`**
+  - **Query Params:** `sourceId`, `eventId`, `search`, `startDate`, `endDate`, `sortBy`, `sortOrder`, `page`, `limit`
+  - **Description:** Retrieve paginated articles with optional keyword search across headlines/summaries and publication date range filtering.
 - **`GET /api/v1/articles/:id`**
-  - **Description:** Retrieve single article metadata and extracted content.
-- **`GET /api/v1/articles/:id/analysis`**
-  - **Description:** Retrieve granular NLP analysis (framing, sentiment, entities, quotes, evidence).
-- **`POST /api/v1/articles/:id/analyze`**
-  - **Description:** Trigger or re-run analysis job via AI Engine.
+  - **Description:** Retrieve single article metadata, extracted text, and associated source.
+- **`POST /api/v1/articles/analyze`**
+  - **Body:** `{ "url": "https://..." }` or `{ "text": "..." }`
+  - **Description:** Submit article for framing analysis (returns 501 until Day 5 AI engine connection).
 
-### 2.5 Cross-Source Comparison Endpoints
-- **`GET /api/v1/comparisons`**
-  - **Query Params:** `articleA=<id>&articleB=<id>`
-  - **Description:** Retrieve or dynamically generate comparative framing analysis between two articles.
+### 2.7 News Ingestion & Collection Endpoints
+- **`GET /api/v1/collection/status`**
+  - **Description:** Retrieve current status of the collection pipeline (running flag and previous execution summary).
+- **`POST /api/v1/collection/run`** (Protected: Researcher/Admin)
+  - **Headers:** `Authorization: Bearer <jwt_token>`
+  - **Description:** Trigger an idempotent news collection cycle across all active RSS sources. Concurrency-guarded to reject overlapping executions with HTTP 409.
 
-### 2.6 Analysis, Comparison, and History Endpoints
+### 2.8 Analysis, Comparison, and History Endpoints
 - `GET /api/v1/analyses` — Paginated stored analysis records.
 - `GET /api/v1/analyses/:id` — One stored article analysis.
 - `GET /api/v1/comparisons` — Paginated stored comparisons.

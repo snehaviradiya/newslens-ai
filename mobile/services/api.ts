@@ -104,6 +104,33 @@ export class ApiClient {
     return { data: MOCK_SOURCES, isLive: false };
   }
 
+  // Fetch News Articles
+  async getArticles(params?: { sourceId?: string; search?: string; page?: number; limit?: number }): Promise<{ data: NewsArticle[]; isLive: boolean }> {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 2000);
+
+      const query = new URLSearchParams();
+      if (params?.sourceId) query.set('sourceId', params.sourceId);
+      if (params?.search) query.set('search', params.search);
+      if (params?.page) query.set('page', params.page.toString());
+      if (params?.limit) query.set('limit', params.limit.toString());
+
+      const url = `${this.baseUrl}/api/v1/articles${query.toString() ? `?${query.toString()}` : ''}`;
+      const res = await fetch(url, { signal: controller.signal });
+      clearTimeout(timeoutId);
+
+      if (res.ok) {
+        const json = await res.json();
+        return { data: json.data || json, isLive: true };
+      }
+    } catch {
+      // Fallback
+    }
+
+    return { data: MOCK_ARTICLES, isLive: false };
+  }
+
   // Request Article Framing Analysis
   async analyzeArticle(payload: { url?: string; text?: string }): Promise<{ analysis: ArticleAnalysis; isLive: boolean }> {
     try {

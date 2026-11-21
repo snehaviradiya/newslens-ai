@@ -35,15 +35,12 @@ export function normalizeUrl(rawUrl: string): string {
       parsed.searchParams.delete(param);
     }
 
-    // Strip empty query string
-    let normalized = parsed.toString();
-
-    // Strip trailing slash if not root
-    if (parsed.pathname !== '/' && normalized.endsWith('/')) {
-      normalized = normalized.slice(0, -1);
+    // Strip trailing slash from pathname if not root
+    if (parsed.pathname !== '/' && parsed.pathname.endsWith('/')) {
+      parsed.pathname = parsed.pathname.slice(0, -1);
     }
 
-    return normalized;
+    return parsed.toString();
   } catch {
     // If not a parseable URL, return trimmed original
     return rawUrl.trim();

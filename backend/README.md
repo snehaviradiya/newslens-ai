@@ -43,9 +43,14 @@ npm run prisma:migrate:deploy
 - `GET /api/v1/auth/me`
 - `GET /api/v1/sources`
 - `GET /api/v1/sources/:id`
-- `GET /api/v1/articles`
+- `POST /api/v1/sources` — protected by bearer token (`RESEARCHER` or `ADMIN`)
+- `PATCH /api/v1/sources/:id` — protected by bearer token (`RESEARCHER` or `ADMIN`)
+- `POST /api/v1/sources/validate-feed` — test and validate any RSS/Atom feed URL
+- `GET /api/v1/articles` — supports `search`, `sourceId`, `startDate`, `endDate`, `sortBy`, `sortOrder`, pagination
 - `GET /api/v1/articles/:id`
 - `POST /api/v1/articles/analyze` — returns `501` until the AI engine exists
+- `GET /api/v1/collection/status` — current ingestion job state and last run metadata
+- `POST /api/v1/collection/run` — trigger manual collection cycle across active sources (`RESEARCHER` or `ADMIN`)
 - `GET /api/v1/events`
 - `GET /api/v1/events/:id`
 - `GET /api/v1/analyses`
@@ -53,6 +58,14 @@ npm run prisma:migrate:deploy
 - `GET /api/v1/comparisons`
 - `GET /api/v1/comparisons/:id`
 - `GET /api/v1/history` — protected by a bearer token
+
+## RSS Ingestion & Collection Pipeline
+
+NewsLens AI includes an automated, idempotent RSS collection pipeline:
+- **Verified Sources:** Configured with BBC News, The Guardian, The New York Times, and NPR News.
+- **URL & Content Normalization:** Enforces HTTPS, removes tracking parameters (`utm_*`, `fbclid`), and cleans HTML markup.
+- **Deduplication:** Uses database unique constraints on `originalUrl` to guarantee idempotent multi-run execution without article duplication.
+- **Scheduler:** Configurable background collection via `ENABLE_COLLECTION_SCHEDULER=true` and `COLLECTION_INTERVAL_MINUTES=60`.
 
 ## Mobile Connection
 
