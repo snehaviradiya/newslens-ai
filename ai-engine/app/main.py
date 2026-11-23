@@ -79,8 +79,11 @@ def analyze_batch_articles(batch: BatchAnalysisRequest) -> BatchAnalysisResponse
     for req in batch.articles:
         try:
             analyses.append(analyze_article(req))
-        except Exception:
-            continue
+        except ValueError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"Article analysis failed validation: {str(exc)}",
+            )
 
     return BatchAnalysisResponse(totalProcessed=len(analyses), analyses=analyses)
 

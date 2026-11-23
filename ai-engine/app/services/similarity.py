@@ -7,7 +7,9 @@ from typing import List, Set
 import re
 import math
 from collections import Counter
+import unicodedata
 from app.schemas.analysis import SimilarityResponse
+from app.services.preprocessing import clean_and_normalize
 
 STOPWORDS: Set[str] = {
     "a", "about", "above", "after", "again", "against", "all", "am", "an", "and", "any", "are", "aren't",
@@ -24,14 +26,26 @@ STOPWORDS: Set[str] = {
     "to", "too", "under", "until", "up", "very", "was", "wasn't", "we", "we'd", "we'll", "we're", "we've",
     "were", "weren't", "what", "what's", "when", "when's", "where", "where's", "which", "while", "who",
     "who's", "whom", "why", "why's", "with", "won't", "would", "wouldn't", "you", "you'd", "you'll",
-    "youre", "you've", "your", "yours", "yourself", "yourselves"
+    "youre", "you've", "your", "yours", "yourself", "yourselves",
+    "according", "article", "news", "new", "report", "reports", "said", "today",
+    "year", "years", "official", "officials"
 }
 
 
 def _tokenize(text: str) -> List[str]:
-    """Tokenize and remove punctuation and stopwords."""
-    words = re.findall(r'\b[a-zA-Z]{3,}\b', text.lower())
-    return [w for w in words if w not in STOPWORDS]
+    """Normalize text, remove common words, and reduce simple English plurals."""
+    normalized = unicodedata.normalize("NFKC", clean_and_normalize(text)).casefold()
+    words = re.findall(r"\b[^\W_]{3,}\b", normalized, flags=re.UNICODE)
+    tokens = []
+    for word in words:
+        if word in STOPWORDS:
+            continue
+        if len(word) > 4 and word.endswith("ies"):
+            word = word[:-3] + "y"
+        elif len(word) > 4 and word.endswith("s") and not word.endswith(("ss", "us", "is")):
+            word = word[:-1]
+        tokens.append(word)
+    return tokens
 
 
 def _cosine_similarity(vec1: Counter, vec2: Counter) -> float:

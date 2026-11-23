@@ -6,14 +6,19 @@ POSITIVE_WORDS = {
     "progress", "success", "milestone", "historic", "optimistic", "growth", "triumph",
     "agreement", "consensus", "breakthrough", "achievement", "benefit", "prosper",
     "solution", "cooperation", "praise", "welcome", "strengthen", "advance", "peace",
-    "effective", "recovery", "innovation", "vital", "constructive", "stability"
+    "effective", "recovery", "innovation", "vital", "constructive", "stability",
+    "improve", "improves", "improved", "support", "supports", "supported",
+    "welcomes", "welcomed", "praised", "approve", "approves", "approved",
+    "benefited", "reduced", "recovered", "secured", "saved",
 }
 
 NEGATIVE_WORDS = {
     "crisis", "failure", "scandal", "collapse", "disaster", "warning", "threat",
     "condemn", "decline", "corruption", "chaos", "alarm", "danger", "plunge", "loss",
     "blame", "criticize", "shortfall", "catastrophe", "dispute", "protest", "conflict",
-    "severe", "deficit", "violation", "damage", "grim", "hostile", "outrage"
+    "severe", "deficit", "violation", "damage", "grim", "hostile", "outrage",
+    "worsened", "failed", "harm", "harmful", "declined", "fell", "lost",
+    "killed", "injured", "disrupted",
 }
 
 SUBJECTIVE_MARKERS = {

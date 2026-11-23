@@ -105,13 +105,7 @@ def classify_topics(text: str, sentences: List[str], max_topics: int = 3) -> Lis
     topic_scores.sort(key=lambda x: x[1], reverse=True)
 
     if not topic_scores:
-        return [
-            TopicEvidence(
-                topic="General News",
-                score=0.5,
-                supportingText="General news reporting"
-            )
-        ]
+        return [TopicEvidence(topic="General News", score=0.0, supportingText=None)]
 
     results: List[TopicEvidence] = []
     for topic, score, keywords in topic_scores[:max_topics]:

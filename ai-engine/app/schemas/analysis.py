@@ -1,5 +1,5 @@
 from typing import Dict, List, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class FramingScores(BaseModel):
@@ -14,7 +14,7 @@ class EntityEvidence(BaseModel):
     name: str
     type: str  # PERSON, ORG, GPE, POL_PARTY
     mentionCount: int
-    stance: str  # Supportive, Critical, Neutral
+    stance: str  # Supportive, Critical, Neutral, Unknown
     evidence: Optional[str] = None
 
 
@@ -47,6 +47,13 @@ class ArticleAnalysisRequest(BaseModel):
     headline: str = Field(..., min_length=3, description="Article headline")
     content: str = Field(..., min_length=15, description="Article body content")
     sourceName: Optional[str] = Field("Unknown Source", description="Publishing outlet name")
+
+    @field_validator("headline", "content")
+    @classmethod
+    def reject_blank_text(cls, value: str) -> str:
+        if not value or not value.strip():
+            raise ValueError("Text fields must contain meaningful content")
+        return value.strip()
 
 
 class ArticleAnalysisResponse(BaseModel):
