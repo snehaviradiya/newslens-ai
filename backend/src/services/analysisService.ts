@@ -3,7 +3,7 @@ import { prisma } from '../utils/prisma.js';
 import { env } from '../config/env.js';
 
 export const analysisService = {
-  analyzeText: async (headline: string, text: string) => {
+  analyzeText: async (headline: string, text: string, sourceName = 'NewsLens Backend') => {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), env.AI_ENGINE_TIMEOUT_MS);
 
@@ -14,7 +14,7 @@ export const analysisService = {
         body: JSON.stringify({
           headline,
           content: text,
-          sourceName: 'NewsLens Backend',
+          sourceName,
         }),
         signal: controller.signal,
       });
@@ -73,7 +73,7 @@ export const analysisService = {
     try {
       const [data, total] = await Promise.all([
         prisma.articleComparison.findMany({
-          include: { articleA: true, articleB: true, event: true },
+          include: { articleA: { include: { source: true } }, articleB: { include: { source: true } }, event: true },
           skip: (page - 1) * limit,
           take: limit,
           orderBy: { createdAt: 'desc' },
@@ -90,7 +90,7 @@ export const analysisService = {
     try {
       const comparison = await prisma.articleComparison.findUnique({
         where: { id },
-        include: { articleA: true, articleB: true, event: true },
+        include: { articleA: { include: { source: true } }, articleB: { include: { source: true } }, event: true },
       });
       if (!comparison) throw new AppError('Comparison not found.', 404);
       return comparison;
