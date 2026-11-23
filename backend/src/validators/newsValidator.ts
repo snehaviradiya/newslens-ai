@@ -54,6 +54,7 @@ export const eventFilterSchema = paginationQuerySchema.extend({
 export const analyzeArticleInputSchema = z.object({
   url: z.string().url('Must provide a valid article web URL').optional(),
   text: z.string().min(20, 'Article text must be at least 20 characters').optional(),
+  headline: z.string().min(3, 'Headline must be at least 3 characters').optional(),
 }).refine((data) => data.url || data.text, {
   message: 'Either an article web URL or article text must be provided.',
 });

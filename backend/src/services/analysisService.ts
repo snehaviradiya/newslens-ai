@@ -1,7 +1,43 @@
 import { AppError } from '../middleware/errorHandler.js';
 import { prisma } from '../utils/prisma.js';
+import { env } from '../config/env.js';
 
 export const analysisService = {
+  analyzeText: async (headline: string, text: string) => {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), env.AI_ENGINE_TIMEOUT_MS);
+
+    try {
+      const response = await fetch(`${env.AI_ENGINE_URL.replace(/\/$/, '')}/api/v1/analyze`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          headline,
+          content: text,
+          sourceName: 'NewsLens Backend',
+        }),
+        signal: controller.signal,
+      });
+
+      if (!response.ok) {
+        const body = await response.text();
+        throw new AppError(
+          `AI analysis service returned ${response.status}. ${body.slice(0, 300)}`,
+          response.status === 422 ? 422 : 502
+        );
+      }
+
+      return await response.json();
+    } catch (error) {
+      if (error instanceof AppError) throw error;
+      throw new AppError(
+        'AI analysis service is unavailable. Start the FastAPI engine or configure AI_ENGINE_URL.',
+        503
+      );
+    } finally {
+      clearTimeout(timeout);
+    }
+  },
   getAnalyses: async (page: number, limit: number) => {
     try {
       const [data, total] = await Promise.all([

@@ -18,6 +18,11 @@ const envSchema = z.object({
   JWT_EXPIRES_IN: z.string().default('7d'),
   DATABASE_URL: z.string().optional(),
   AI_ENGINE_URL: z.string().default('http://localhost:8000'),
+  AI_ENGINE_TIMEOUT_MS: z
+    .string()
+    .optional()
+    .default('10000')
+    .transform((val) => parseInt(val, 10) || 10000),
   ENABLE_COLLECTION_SCHEDULER: z
     .string()
     .optional()

@@ -112,7 +112,7 @@ The project strictly follows an 8-day development timeline from **19 November 20
 | **20 Nov 2026** | **Mobile Application Foundation** | Expo setup, TypeScript config, React Navigation, design tokens, and core screen scaffolding. | **Completed** |
 | **21 Nov 2026** | **Backend Architecture & Database Setup** | Express REST server, PostgreSQL schema, Prisma ORM, and JWT authentication. | Completed |
 | **22 Nov 2026** | **News Collection & Ingestion Pipeline** | RSS feed parsers, news API integrations, text extraction, and deduplication. | **Completed** |
-| **23 Nov 2026** | **AI/NLP Engine & Framing Analysis** | FastAPI service, text preprocessing, NER, sentiment, framing classification, and evidence citations. | Planned |
+| **23 Nov 2026** | **AI/NLP Engine & Framing Analysis** | FastAPI service, text preprocessing, NER, sentiment, framing classification, and evidence citations. | **Completed** |
 | **24 Nov 2026** | **Related-Event Detection & Comparisons** | Semantic article clustering, event grouping, and cross-source comparative analysis. | Planned |
 | **25 Nov 2026** | **End-to-End Integration & UI Polish** | Mobile-to-backend API wiring, interactive comparison reports, testing, and bug fixes. | Planned |
 | **26 Nov 2026** | **Final Testing, APK, Deployment & Freeze** | Regression testing, Android APK generation, final synchronization, academic submission, and project freeze. | Planned |

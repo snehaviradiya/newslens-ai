@@ -2,6 +2,7 @@
 
 import { NextFunction, Request, Response } from 'express';
 import { newsService } from '../services/newsService.js';
+import { analysisService } from '../services/analysisService.js';
 import { articleFilterSchema, idParamSchema, analyzeArticleInputSchema } from '../validators/newsValidator.js';
 
 export const articleController = {
@@ -39,14 +40,21 @@ export const articleController = {
   // POST /api/v1/articles/analyze
   analyzeArticle: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      analyzeArticleInputSchema.parse(req.body);
-      res.status(501).json({
-        success: false,
-        error: {
-          code: 'NOT_IMPLEMENTED',
-          message: 'Article analysis requires the Day 5 AI/NLP engine, which is not connected yet.',
-        },
-      });
+      const input = analyzeArticleInputSchema.parse(req.body);
+      if (!input.text) {
+        res.status(501).json({
+          success: false,
+          error: {
+            code: 'NOT_IMPLEMENTED',
+            message: 'URL-only article ingestion is not yet implemented. Provide article text and an optional headline.',
+          },
+        });
+        return;
+      }
+
+      const headline = input.headline || input.text.split(/\s+/).slice(0, 12).join(' ');
+      const data = await analysisService.analyzeText(headline, input.text);
+      res.status(200).json({ success: true, data });
     } catch (error) {
       next(error);
     }

@@ -160,3 +160,60 @@ Build a robust, idempotent news collection pipeline that ingests articles from m
   - `mobile/npm run typecheck`: Passed cleanly with zero errors.
 - **Feed Verification:** Verified real public feeds against live servers (BBC, Guardian, NYT, NPR).
 - **Git Commit Cadence:** Followed the strict Day 4 policy of maximum 2–3 meaningful commits directly on `main`.
+
+---
+
+## Day 5: 23 November 2026 — AI/NLP Analysis Engine
+
+### Objectives & Scope
+Build a modular FastAPI service inside `ai-engine/` that reports rule-based text signals. Evidence excerpts should be copied from the submitted article; the scores are not proof of bias, author intent, or political motivation.
+
+### Completed Work
+1. **Engine Architecture & Dependency Management:**
+   - Initialized virtual environment in `ai-engine/.venv/` with Python 3.9+.
+   - Created `ai-engine/requirements.txt` containing FastAPI, Uvicorn, Pydantic v2, Pytest, HTTPX, and AnyIO.
+   - Created `ai-engine/.env.example` documenting service port and logging parameters.
+2. **Pydantic Schemas (`ai-engine/app/schemas/analysis.py`):**
+   - Defined strictly typed data contracts for `ArticleAnalysisRequest`, `ArticleAnalysisResponse`, `FramingScores`, `EntityEvidence`, `QuoteEvidence`, `TopicEvidence`, `PoliticalSignal`, `EvidenceSnippet`, `SimilarityRequest`, `SimilarityResponse`, `BatchAnalysisRequest`, and `BatchAnalysisResponse`.
+3. **Preprocessing Pipeline (`ai-engine/app/services/preprocessing.py`):**
+   - Implemented `clean_html` to strip embedded tags, styles, scripts, and decode common entities.
+   - Implemented `normalize_whitespace` for clean newline and tab normalization.
+   - Implemented `segment_sentences` with title and abbreviation protection (`Dr.`, `U.S.`, `Sen.`, etc.) for robust sentence boundary splitting.
+4. **Sentiment & Headline Sensationalism (`ai-engine/app/services/sentiment.py`):**
+   - Sentence-level polarity score (-1.0 to 1.0) and subjectivity score (0.0 to 1.0).
+   - Editorial tone classification: `NEUTRAL`, `CRITICAL`, `ADVOCATING`, `ALARMIST`, `BALANCED`.
+   - Headline sensationalism scoring measuring hyperbolic clickbait action verbs, punctuation intensity, and uppercase emphasis.
+5. **Communication-Science Framing Engine (`ai-engine/app/services/framing.py`):**
+   - Evaluates the 5 classic communication framing dimensions: Conflict, Economic Consequences, Human Interest, Morality & Ethics, and Attribution of Responsibility.
+   - Extracts verbatim sentence citations with detected keyword markers for high-scoring dimensions.
+6. **Entity Recognition & Quoted Perspective Extraction (`ai-engine/app/services/entities.py`):**
+   - Detects Persons, Organizations, Geopolitical entities, and Political Parties with mention frequencies and contextual stance.
+   - Extracts direct and attributed speech (`said`, `stated`, `argued`, `warned`) linking verbatim quotes to named speakers.
+7. **Topic Classification & Political Signals (`ai-engine/app/services/topics.py`, `ai-engine/app/services/political.py`):**
+   - Categorizes articles into 8 standard news domains with confidence metrics and supporting keyword evidence.
+   - Detects observable political signals (PartyReference, CampaignRhetoric, PolicyDebate, GovernmentAction) with direct sentence citations, avoiding blanket outlet-level political labeling.
+8. **Semantic Text Similarity Engine (`ai-engine/app/services/similarity.py`):**
+   - Implemented token-vector cosine similarity with stopword filtering and shared term ranking for cross-article comparisons.
+9. **FastAPI Application & Endpoints (`ai-engine/app/main.py`):**
+   - `GET /health`: Capabilities inventory and health check probe.
+   - `POST /api/v1/analyze`: Full multi-dimensional analysis of a single article.
+   - `POST /api/v1/analyze/batch`: Batch article analysis.
+   - `POST /api/v1/similarity`: Pairwise semantic similarity comparison.
+
+### Verification & Testing
+- **AI Engine Pytest Suite (`ai-engine/tests/`):**
+  - The initial implementation log recorded 16 passing tests. That result was historical and was not reproducible in the current Python 3.9 environment before stabilization.
+- **Backend Suite:**
+  - The initial implementation log recorded 43 passing Jest tests. The current full-suite rerun is recorded below; its HTTP tests could not bind localhost in the sandbox.
+- **Documentation:** Created comprehensive `ai-engine/README.md` with complete architecture, installation, API contracts, and integration instructions.
+- **Git Commits:** Maintained strict Day 5 commit policy of maximum 2–3 commits on `main`.
+
+### AI Engine Stabilization — 23 November 2026
+- Changed the framing annotation and regex replacement to run on the repository’s existing Python 3.9.6 environment.
+- Added quote-attributed speaker extraction to the entity candidates and changed political signal descriptions to report observed lexical matches only.
+- Added regression coverage that checks framing evidence, entity evidence, political excerpts, and extracted quote text against the original HTML-containing input.
+- Documented the deterministic, rule-based approach, its limitations, Python 3.9 support, and the fact that no pretrained model is integrated.
+- AI engine verification: `cd ai-engine && PYTHONPATH=. .venv/bin/pytest tests -q` — **27 passed** (run 23 November 2026).
+- Python 3.9 syntax compilation: **passed** with `PYTHONPYCACHEPREFIX=/private/tmp/newslens-ai-pycache .venv/bin/python -m compileall -q app tests`.
+- Backend verification: `npm run typecheck` — **passed**. `npm test -- --runInBand` — **not fully runnable in this sandbox** because Jest/Supertest HTTP requests fail with `listen EPERM: operation not permitted 127.0.0.1`; 11 tests passed and 32 did not complete successfully. This is an environment failure, not a passing test result.
+- Backend integration remains partial: article analysis is forwarded to the AI service but is not persisted to Prisma; URL-only fetching and backend-to-engine integration tests remain outstanding.
