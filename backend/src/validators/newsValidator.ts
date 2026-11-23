@@ -51,6 +51,17 @@ export const eventFilterSchema = paginationQuerySchema.extend({
   category: z.string().optional(),
 });
 
+export const detectEventsSchema = z.object({
+  articleId: z.string().min(1).optional(),
+  limit: z.number().int().min(1).max(100).optional().default(100),
+});
+
+export const compareEventSchema = z.object({
+  articleIds: z.array(z.string().min(1)).min(2).max(20).optional(),
+}).refine((value) => !value.articleIds || new Set(value.articleIds).size === value.articleIds.length, {
+  message: 'Article IDs must be unique.',
+});
+
 export const analyzeArticleInputSchema = z.object({
   url: z.string().url('Must provide a valid article web URL').optional(),
   text: z.string().min(20, 'Article text must be at least 20 characters').optional(),

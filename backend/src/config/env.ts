@@ -18,6 +18,10 @@ const envSchema = z.object({
   JWT_EXPIRES_IN: z.string().default('7d'),
   DATABASE_URL: z.string().optional(),
   AI_ENGINE_URL: z.string().default('http://localhost:8000'),
+  EVENT_MATCH_THRESHOLD: z.string().default('0.52').transform((value) => {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) && parsed >= 0.1 && parsed <= 1 ? parsed : 0.52;
+  }),
   AI_ENGINE_TIMEOUT_MS: z
     .string()
     .optional()

@@ -3,6 +3,7 @@
 import { DEFAULT_NEWS_SOURCES } from '../config/sources.js';
 import { prisma } from '../utils/prisma.js';
 import { rssParser, ParsedFeedItem } from './rssParserService.js';
+import { eventDetectionService } from './eventDetectionService.js';
 
 export interface IngestionSourceSummary {
   sourceId: string;
@@ -142,7 +143,7 @@ export class NewsIngestionService {
     }
 
     // 2. Insert new article
-    await prisma.newsArticle.create({
+    const created = await prisma.newsArticle.create({
       data: {
         headline: item.title,
         originalUrl: item.url,
@@ -153,6 +154,14 @@ export class NewsIngestionService {
         sourceId: sourceId,
       },
     });
+
+    if (created?.id) {
+      try {
+        await eventDetectionService.assignArticle(created.id);
+      } catch (error) {
+        console.warn(`[Ingestion] Event matching skipped for article ${created.id}:`, (error as Error).message);
+      }
+    }
 
     return 'INSERTED';
   }
