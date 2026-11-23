@@ -7,6 +7,10 @@ import { rssParser } from '../src/services/rssParserService';
 import { newsIngestionService } from '../src/services/newsIngestionService';
 import { signToken } from '../src/utils/jwt';
 
+jest.mock('../src/services/eventDetectionService.js', () => ({
+  eventDetectionService: { assignArticle: jest.fn().mockResolvedValue({ matched: false, eventId: null }) },
+}));
+
 // Mock Prisma for Collection & Source operations
 jest.mock('../src/utils/prisma.js', () => {
   const sources = [

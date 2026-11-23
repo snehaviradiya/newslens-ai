@@ -33,8 +33,7 @@ NewsLens AI is architected as a decoupled, multi-tier system composed of a clien
 | +------------------+ |               +----------------------+
 | | Preprocessing    | |
 | +------------------+ |
-| | Hugging Face     | |
-| | Transformers     | |
+| | Rule-based NLP   | |
 | +------------------+ |
 | | Framing Analyzer | |
 | +------------------+ |
@@ -75,15 +74,15 @@ NewsLens AI is architected as a decoupled, multi-tier system composed of a clien
   - `middleware/`: JWT verification, rate limiting, request validation, and centralized error handling.
 
 ### 2.3 AI & NLP Engine (`ai-engine/`)
-- **Runtime:** Python 3.10+ with FastAPI and Uvicorn.
-- **Role:** High-performance computational NLP engine performing multi-dimensional framing, entity extraction, sentiment, and event clustering.
+- **Runtime:** Python 3.9+ with FastAPI and Uvicorn.
+- **Role:** Deterministic, rule-based framing, entity, sentiment, topic, quote, and political-signal extraction. No pretrained model is currently integrated.
 - **Key Modules:**
   - `app/main.py`: FastAPI application router exposing `/health` and analysis endpoints.
   - `app/services/preprocessing.py`: Text cleaning, sentence tokenization, boilerplate removal.
-  - `app/services/entities.py`: Named Entity Recognition (NER) and entity-level sentiment.
+  - `app/services/entities.py`: Heuristic entity candidates and quote attribution; this is not a pretrained NER model.
   - `app/services/sentiment.py`: Sentence and document-level tone and subjectivity scoring.
   - `app/services/framing.py`: Multi-label framing classification (Conflict, Economic, Human Interest, Morality, Attribution).
-  - `app/services/event_clustering.py`: Sentence-Transformers vector similarity for cross-source article grouping.
+  - Backend `eventMatching.ts`: Weighted lexical overlap and date proximity for event grouping; it does not claim semantic understanding.
 
 ### 2.4 Database Layer (PostgreSQL)
 - **Role:** Relational persistence of application state, user accounts, news sources, raw articles, event clusters, granular NLP analysis results, and cross-source comparisons.
@@ -96,7 +95,7 @@ NewsLens AI is architected as a decoupled, multi-tier system composed of a clien
 
 ## 3. Core Request & Processing Workflows
 
-### 3.1 News Ingestion & Event Clustering Pipeline
+### 3.1 News Ingestion & Event Matching Pipeline
 ```
 [External Sources]
    | (RSS / API)
@@ -105,13 +104,10 @@ NewsLens AI is architected as a decoupled, multi-tier system composed of a clien
    |
    +---> Persists raw article in PostgreSQL
    |
-   +---> Dispatches text to [AI Engine: /api/v1/cluster]
+   +---> Compares headline/content/entity/topic signals within a 72-hour window
             |
             v
-         Computes embeddings -> Matches existing event or creates new cluster
-            |
-            v
-         Returns cluster ID -> Backend links article to NewsEvent
+         Links to a matching event, or leaves the article ungrouped
 ```
 
 ### 3.2 On-Demand & Background Article Analysis

@@ -75,11 +75,11 @@ The project follows a disciplined day-by-day development schedule. Each day is d
 ---
 
 ### Day 5: 23 November 2026 — AI/NLP Engine & Multi-Dimensional Framing Analysis
-- **Focus:** Python FastAPI service, Hugging Face transformers, and analytical pipelines.
+- **Focus:** Python 3.9-compatible FastAPI service and deterministic, evidence-grounded rule-based analysis. No pretrained model is integrated.
 - **Objectives:**
   - Initialize clean FastAPI service in `ai-engine/` with Uvicorn.
   - Implement text preprocessing, sentence segmentation, and boilerplate filtering.
-  - Integrate Named Entity Recognition (NER) pipeline (Persons, Organizations, Locations).
+  - Implement heuristic entity candidate extraction (not pretrained NER).
   - Implement topic extraction and keyword salience.
   - Implement multi-dimensional framing analysis (Conflict, Economic, Human Interest, Morality, Attribution of Responsibility).
   - Implement sentiment, emotional valence, and subjectivity analysis.
@@ -91,18 +91,18 @@ The project follows a disciplined day-by-day development schedule. Each day is d
 ---
 
 ### Day 6: 24 November 2026 — Related-Event Detection & Cross-Source Comparison
-- **Focus:** Semantic article clustering and cross-source comparative analysis.
+- **Focus:** Deterministic lexical/date event grouping and evidence-grounded cross-source comparison.
 - **Objectives:**
-  - Implement sentence-transformer embeddings for semantic event clustering.
+  - Combine headline/content token similarity, entity/topic overlap, and date proximity with a configurable threshold.
   - Group articles from multiple sources covering identical real-world events into `NewsEvent` records.
   - Implement cross-source comparison logic:
     - Headline contrast and framing divergence
     - Quoted stakeholder distribution analysis
     - Fact and topic coverage overlap matrix
-  - Connect Backend orchestration with AI Engine comparison endpoints.
+  - Persist comparison payloads through Prisma and connect the mobile event/comparison screens.
 - **Verification:**
-  - Test suite clusters related articles accurately across disparate sources.
-  - Comparison payload accurately highlights narrative differences.
+  - Deterministic tests cover matching, separation, date windows, grouping, and source-grounded comparisons.
+  - No semantic understanding or editorial intent is claimed.
 
 ---
 
@@ -142,7 +142,7 @@ The project follows a disciplined day-by-day development schedule. Each day is d
 
 To ensure high-resolution academic traceability, development must never be batched into a single monolithic end-of-day commit. Development follows a continuous incremental commit model:
 
-1. **Commit Frequency:** 4–9 meaningful, granular commits per day corresponding to actual completed milestones.
+1. **Commit Frequency:** No more than 2–3 meaningful commits per day, only for independently completed milestones.
 2. **Immediate Checkpoint Rule:** Whenever an independent component, service, screen, data model, test suite, or documentation block is implemented and verified, commit it immediately.
 3. **Branch Model:** All work is committed directly to the `main` branch. No PRs or unnecessary branches.
 4. **Regular Remote Synchronization:** Push verified commits to `origin/main` continuously throughout each development day.

@@ -1,19 +1,43 @@
 // Event Detail Screen — Multi-Source Clustered Articles
 
-import React from 'react';
-import { SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, RefreshControl, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AppButton } from '../components/AppButton';
 import { ArticleCard } from '../components/ArticleCard';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { COLORS, RADIUS, SHADOWS, SPACING, TYPOGRAPHY } from '../constants/theme';
-import { MOCK_ANALYSES, MOCK_ARTICLES } from '../constants/mockData';
+import { api } from '../services/api';
+import { NewsArticle, NewsEvent } from '../types/models';
 import { RootStackParamList } from '../types/navigation';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'EventDetail'>;
 
 export const EventDetailScreen: React.FC<Props> = ({ route, navigation }) => {
-  const { event } = route.params;
+  const [event, setEvent] = useState<NewsEvent>(route.params.event);
+  const [articles, setArticles] = useState<NewsArticle[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | undefined>();
+
+  const loadEvent = useCallback(async () => {
+    const [eventResult, articleResult] = await Promise.all([
+      api.getEvent(route.params.event.id),
+      api.getEventArticles(route.params.event.id),
+    ]);
+    if (eventResult.data) setEvent(eventResult.data);
+    setArticles(articleResult.data);
+    setError(eventResult.isLive && articleResult.isLive ? undefined : 'Could not load live event details. Pull to retry.');
+    setLoading(false);
+    setRefreshing(false);
+  }, [route.params.event.id]);
+
+  useEffect(() => { void loadEvent(); }, [loadEvent]);
+
+  const retry = async () => {
+    setRefreshing(true);
+    await loadEvent();
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -22,17 +46,20 @@ export const EventDetailScreen: React.FC<Props> = ({ route, navigation }) => {
         subtitle={`${event.sourceCount} distinct sources reporting`}
         onBack={() => navigation.goBack()}
       />
-      <ScrollView contentContainerStyle={styles.container}>
+      <ScrollView
+        contentContainerStyle={styles.container}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={retry} />}
+      >
         <View style={styles.eventOverview}>
           <View style={styles.categoryPill}>
             <Text style={styles.categoryText}>{event.topicCategory}</Text>
           </View>
           <Text style={styles.eventTitle}>{event.title}</Text>
-          <Text style={styles.eventSummary}>{event.summary}</Text>
+          {event.summary ? <Text style={styles.eventSummary}>{event.summary}</Text> : null}
 
           <View style={styles.compareActionBox}>
             <Text style={styles.compareActionText}>
-              See how different editorial teams framed this same negotiation:
+              Compare articles grouped by the matching service. Differences are reported as text signals with source excerpts.
             </Text>
             <AppButton
               title="Compare Reporting Angles →"
@@ -44,16 +71,19 @@ export const EventDetailScreen: React.FC<Props> = ({ route, navigation }) => {
         </View>
 
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Reporting Articles ({event.sources.length})</Text>
+          <Text style={styles.sectionTitle}>Reporting Articles ({articles.length})</Text>
           <Text style={styles.sectionSubtitle}>Select an article to inspect its specific textual framing evidence</Text>
         </View>
 
-        {MOCK_ARTICLES.map((article, index) => (
+        {loading ? <ActivityIndicator color={COLORS.primary} /> : null}
+        {error ? <Text style={styles.sectionSubtitle}>{error}</Text> : null}
+        {!loading && !error && articles.length === 0 ? <Text style={styles.sectionSubtitle}>No live articles are assigned to this event yet.</Text> : null}
+        {articles.map((article) => (
           <ArticleCard
             key={article.id}
             article={article}
-            onPress={() => navigation.navigate('ArticleDetail', { article, analysis: MOCK_ANALYSES[index] })}
-            onAnalyzePress={() => navigation.navigate('ArticleDetail', { article, analysis: MOCK_ANALYSES[index] })}
+            onPress={() => navigation.navigate('ArticleDetail', { article })}
+            onAnalyzePress={() => navigation.navigate('ArticleDetail', { article })}
           />
         ))}
       </ScrollView>

@@ -34,7 +34,11 @@ export const AnalysisScreen: React.FC = () => {
 
     try {
       const res = await api.analyzeArticle({ url: url.trim(), text: text.trim() });
-      setResult(res.analysis);
+      if (!res.isLive || !res.analysis) {
+        setError(res.error || 'Analysis service is unavailable. Please retry.');
+      } else {
+        setResult(res.analysis);
+      }
     } catch {
       setError('An error occurred during analysis. Please try again.');
     } finally {

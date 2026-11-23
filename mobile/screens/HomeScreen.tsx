@@ -8,7 +8,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ArticleCard } from '../components/ArticleCard';
 import { NewsSourceCard } from '../components/NewsSourceCard';
 import { COLORS, RADIUS, SHADOWS, SPACING, TYPOGRAPHY } from '../constants/theme';
-import { MOCK_ANALYSES, MOCK_ARTICLES, MOCK_EVENTS, MOCK_SOURCES } from '../constants/mockData';
+import { MOCK_ARTICLES, MOCK_SOURCES } from '../constants/mockData';
 import { NewsArticle, NewsEvent, NewsSource } from '../types/models';
 import { MainTabParamList, RootStackParamList } from '../types/navigation';
 import { api } from '../services/api';
@@ -21,7 +21,8 @@ type Props = {
 };
 
 export const HomeScreen: React.FC<Props> = ({ navigation }) => {
-  const [events, setEvents] = useState<NewsEvent[]>(MOCK_EVENTS);
+  const [events, setEvents] = useState<NewsEvent[]>([]);
+  const [eventError, setEventError] = useState<string | undefined>();
   const [sources, setSources] = useState<NewsSource[]>(MOCK_SOURCES);
   const [articles, setArticles] = useState<NewsArticle[]>(MOCK_ARTICLES);
   const [refreshing, setRefreshing] = useState(false);
@@ -33,6 +34,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
     const eventResult = await api.getEvents();
     setEvents(eventResult.data);
+    setEventError(eventResult.error);
 
     const sourceResult = await api.getSources();
     setSources(sourceResult.data);
@@ -133,7 +135,11 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
           <Text style={styles.sectionMeta}>Clustered coverage across multiple newsrooms</Text>
         </View>
         <View style={styles.eventsList}>
-          {events.map(renderEventCluster)}
+          {events.length ? events.map(renderEventCluster) : (
+            <Text style={styles.sourcesLabel}>
+              {eventError || 'No matched events yet. Collect related articles to create an event group.'}
+            </Text>
+          )}
         </View>
 
         {/* Monitored News Sources Horizontal Carousel */}
@@ -161,12 +167,12 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
         {articles.length === 0 ? (
           <Text style={styles.sourcesLabel}>No ingested articles available.</Text>
         ) : (
-          articles.map((article, index) => (
+          articles.map((article) => (
             <ArticleCard
               key={article.id}
               article={article}
-              onPress={() => navigation.navigate('ArticleDetail', { article, analysis: MOCK_ANALYSES[index % MOCK_ANALYSES.length] })}
-              onAnalyzePress={() => navigation.navigate('ArticleDetail', { article, analysis: MOCK_ANALYSES[index % MOCK_ANALYSES.length] })}
+              onPress={() => navigation.navigate('ArticleDetail', { article })}
+              onAnalyzePress={() => navigation.navigate('ArticleDetail', { article })}
             />
           ))
         )}

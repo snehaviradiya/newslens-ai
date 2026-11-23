@@ -1,7 +1,7 @@
 // Centralized API Service for NewsLens AI Mobile Client
 
-import { ArticleAnalysis, ArticleComparison, NewsArticle, NewsEvent, NewsSource } from '../types/models';
-import { MOCK_ANALYSES, MOCK_ARTICLES, MOCK_COMPARISON, MOCK_EVENTS, MOCK_SOURCES } from '../constants/mockData';
+import { ArticleAnalysis, EventComparisonResult, NewsArticle, NewsEvent, NewsSource } from '../types/models';
+import { MOCK_ARTICLES, MOCK_SOURCES } from '../constants/mockData';
 
 // Dynamic API Base URL resolution
 // Configure in mobile/.env via EXPO_PUBLIC_API_BASE_URL
@@ -61,7 +61,7 @@ export class ApiClient {
   }
 
   // Fetch Latest News Events
-  async getEvents(): Promise<{ data: NewsEvent[]; isLive: boolean }> {
+  async getEvents(): Promise<{ data: NewsEvent[]; isLive: boolean; error?: string }> {
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 2000);
@@ -73,13 +73,93 @@ export class ApiClient {
 
       if (res.ok) {
         const json = await res.json();
-        return { data: json.data || json, isLive: true };
+        const records = Array.isArray(json.data) ? json.data : [];
+        return {
+          data: records.map((event: any) => ({
+            id: event.id,
+            title: event.title,
+            summary: event.description || '',
+            topicCategory: event.category || 'General',
+            sourceCount: event.sourceCount ?? event.sources?.length ?? 0,
+            articleCount: event.articleCount ?? 0,
+            updatedAt: event.updatedAt || event.eventDate,
+            sources: Array.isArray(event.sources) ? event.sources.map((source: any) => typeof source === 'string' ? source : source.name) : [],
+          })),
+          isLive: true,
+        };
       }
     } catch {
-      // Fallback to local mock data during frontend development
+      // Empty state is shown by the screen; event data is never replaced with demo records.
     }
 
-    return { data: MOCK_EVENTS, isLive: false };
+    return { data: [], isLive: false, error: 'Event service unavailable. Pull to retry.' };
+  }
+
+  async getEvent(eventId: string): Promise<{ data: NewsEvent | null; isLive: boolean }> {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/v1/events/${encodeURIComponent(eventId)}`);
+      if (!response.ok) return { data: null, isLive: false };
+      const { data: event } = await response.json();
+      if (!event) return { data: null, isLive: false };
+      return {
+        data: {
+          id: event.id,
+          title: event.title,
+          summary: event.description || '',
+          topicCategory: event.category || 'General',
+          sourceCount: event.sourceCount ?? new Set((event.articles || []).map((article: any) => article.sourceId)).size,
+          articleCount: event.articleCount ?? event.articles?.length ?? 0,
+          updatedAt: event.updatedAt || event.eventDate,
+          sources: event.sources || Array.from(new Set((event.articles || []).map((article: any) => article.source?.name).filter(Boolean))),
+        },
+        isLive: true,
+      };
+    } catch {
+      return { data: null, isLive: false };
+    }
+  }
+
+  async getEventArticles(eventId: string, page = 1, limit = 50): Promise<{ data: NewsArticle[]; isLive: boolean }> {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/v1/events/${encodeURIComponent(eventId)}/articles?page=${page}&limit=${limit}`);
+      if (!response.ok) return { data: [], isLive: false };
+      const json = await response.json();
+      return {
+        data: (Array.isArray(json.data) ? json.data : []).map((article: any) => ({
+          id: article.id,
+          sourceId: article.sourceId,
+          sourceName: article.source?.name || 'Unknown source',
+          eventId: article.eventId,
+          title: article.headline,
+          author: article.author || undefined,
+          publishedAt: article.publishedAt,
+          url: article.originalUrl,
+          summary: article.summary || '',
+          content: article.content || undefined,
+          category: article.source?.category || 'General',
+        })),
+        isLive: true,
+      };
+    } catch {
+      return { data: [], isLive: false };
+    }
+  }
+
+  async compareEvent(eventId: string): Promise<{ data: EventComparisonResult[]; isLive: boolean; error?: string }> {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/v1/events/${encodeURIComponent(eventId)}/compare`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      });
+      const json = await response.json();
+      if (!response.ok) {
+        return { data: [], isLive: false, error: json.error?.message || 'Comparison could not be generated.' };
+      }
+      return { data: json.data?.comparisons || [], isLive: true };
+    } catch {
+      return { data: [], isLive: false, error: 'Backend is unreachable. Check the API connection and retry.' };
+    }
   }
 
   // Fetch News Sources
@@ -132,7 +212,7 @@ export class ApiClient {
   }
 
   // Request Article Framing Analysis
-  async analyzeArticle(payload: { url?: string; text?: string }): Promise<{ analysis: ArticleAnalysis; isLive: boolean }> {
+  async analyzeArticle(payload: { url?: string; text?: string }): Promise<{ analysis: ArticleAnalysis | null; isLive: boolean; error?: string }> {
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 3000);
@@ -150,65 +230,11 @@ export class ApiClient {
         return { analysis: json.data || json, isLive: true };
       }
     } catch {
-      // Fallback to generated demo analysis
+      // Leave the result empty when the API is unavailable.
     }
-
-    // Return demonstrative analysis for frontend testing
-    const demoAnalysis: ArticleAnalysis = {
-      id: `ana-demo-${Date.now()}`,
-      articleId: 'art-demo',
-      articleTitle: payload.url ? `Analysis for ${payload.url.replace(/^https?:\/\//, '').slice(0, 40)}...` : 'Submitted Article Text Analysis',
-      sourceName: payload.url?.includes('reuters') ? 'Reuters' : payload.url?.includes('guardian') ? 'The Guardian' : 'Independent Source',
-      analyzedAt: new Date().toISOString(),
-      headlineSentiment: -0.15,
-      headlineSensationalism: 0.22,
-      overallTone: 'Balanced',
-      subjectivityScore: 0.38,
-      framingScores: {
-        conflict: 0.42,
-        economic: 0.65,
-        humanInterest: 0.35,
-        morality: 0.20,
-        responsibility: 0.50,
-      },
-      entities: [
-        { name: 'Regulatory Authority', type: 'ORG', mentionCount: 4, stance: 'Neutral' },
-        { name: 'Industry Spokesperson', type: 'PERSON', mentionCount: 2, stance: 'Supportive' },
-      ],
-      quotes: [
-        { speaker: 'Policy Representative', quote: 'We are evaluating the implementation timeline with industry stakeholders.' },
-      ],
-      supportingEvidence: [
-        { frame: 'economic', excerpt: 'Projected capital expenditure requirements were estimated at $450M.' },
-        { frame: 'conflict', excerpt: 'Opposition leaders questioned whether proposed safeguards are enforceable.' },
-      ],
-      isDemo: true,
-    };
-
-    return { analysis: demoAnalysis, isLive: false };
+    return { analysis: null, isLive: false, error: 'Analysis service is unavailable. Check the API connection and retry.' };
   }
 
-  // Fetch Side-by-Side Comparison
-  async getComparison(articleAId?: string, articleBId?: string): Promise<{ comparison: ArticleComparison; isLive: boolean }> {
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 2000);
-
-      const res = await fetch(`${this.baseUrl}/api/v1/comparisons?articleA=${articleAId}&articleB=${articleBId}`, {
-        signal: controller.signal,
-      });
-      clearTimeout(timeoutId);
-
-      if (res.ok) {
-        const json = await res.json();
-        return { comparison: json.data || json, isLive: true };
-      }
-    } catch {
-      // Fallback
-    }
-
-    return { comparison: MOCK_COMPARISON, isLive: false };
-  }
 }
 
 export const api = new ApiClient();

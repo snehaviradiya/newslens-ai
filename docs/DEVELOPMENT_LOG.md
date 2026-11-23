@@ -80,8 +80,8 @@ Construct a fully functional, professional React Native / Expo mobile applicatio
 ### Remaining Integrations (Scheduled)
 - Day 3 (21 Nov): Connect authentication and user profile routes to Express/Prisma backend.
 - Day 4 (22 Nov): Ingest live multi-source RSS feeds into database to replace mock event lists.
-- Day 5 (23 Nov): Connect analysis screen to Python FastAPI AI engine for live Hugging Face transformer inference.
-- Day 6 (24 Nov): Wire automated cross-source event clustering and divergence matching.
+- Day 5 (23 Nov): Connect analysis screen to Python FastAPI AI engine for live rule-based text analysis.
+- Day 6 (24 Nov): Build lexical/date-based event grouping and cross-source evidence comparisons.
 
 ---
 
@@ -217,3 +217,28 @@ Build a modular FastAPI service inside `ai-engine/` that reports rule-based text
 - Python 3.9 syntax compilation: **passed** with `PYTHONPYCACHEPREFIX=/private/tmp/newslens-ai-pycache .venv/bin/python -m compileall -q app tests`.
 - Backend verification: `npm run typecheck` — **passed**. `npm test -- --runInBand` — **not fully runnable in this sandbox** because Jest/Supertest HTTP requests fail with `listen EPERM: operation not permitted 127.0.0.1`; 11 tests passed and 32 did not complete successfully. This is an environment failure, not a passing test result.
 - Backend integration remains partial: article analysis is forwarded to the AI service but is not persisted to Prisma; URL-only fetching and backend-to-engine integration tests remain outstanding.
+
+---
+
+## Day 6: 24 November 2026 — Event Detection & Cross-Source Comparison
+
+### Implemented
+- Added deterministic event matching over a 72-hour window using headline similarity, article-text similarity, entity overlap, topic overlap, and date proximity. `EVENT_MATCH_THRESHOLD` defaults to `0.52`; same-entity mentions alone are insufficient. Newly ingested articles are attached to a matching group, while unmatched articles remain ungrouped.
+- Added an authenticated researcher/admin detection endpoint for one article or a bounded pending batch, paginated event articles, and transaction-based article membership assignment with duplicate/concurrency checks.
+- Added persisted cross-source comparison generation. It reuses or stores rule-based analyses, compares headline indicators, entities, topics, literal quote text, and framing scores, and includes only excerpts present in the corresponding article text. No deliberate omissions or political intent are inferred.
+- Added `ArticleComparison.comparisonDetails` JSON storage through a Prisma migration.
+- Connected event listing/detail/articles and comparison screens to backend responses. Event/comparison data has explicit loading, error, retry, and empty states. Removed the fabricated offline analysis result. Existing source/article demo fallbacks remain labeled as demo mode.
+
+### Verification (24 November 2026)
+- AI engine: `PYTHONPATH=. .venv/bin/pytest tests -q` — **27 passed**.
+- Backend matching/comparison tests: **3 suites, 7 tests passed**.
+- Backend `npm run typecheck` and `npm run build` — **passed**.
+- Mobile `npm run typecheck` — **passed**.
+- Prisma schema validation — **passed**. Live migration/database integration was not run because no database connection was available.
+- Full backend Jest suite: the default sandbox run initially failed HTTP tests because it rejected binding to `127.0.0.1` (`listen EPERM`). Rerun with loopback permission — **8 suites, 55 tests passed**. The ingestion tests mock event detection to keep their scope isolated.
+- `git diff --check` passed before commit preparation. Day 6 commits are recorded in Git history and pushed to `origin/main` after verification.
+
+### Known Limitations
+- Event detection is lexical and date-based rather than semantic. It has a 200-candidate cap and can miss paraphrases or connect stories with overlapping terms.
+- Comparison evidence depends on article text retained by RSS ingestion, which can be truncated summaries. Comparisons require at least two articles from distinct sources.
+- Mobile API response mapping has typecheck coverage but no dedicated automated mobile test harness yet.

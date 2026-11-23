@@ -2,6 +2,7 @@
 
 import request from 'supertest';
 import { createApp } from '../src/app';
+import { signToken } from '../src/utils/jwt';
 
 jest.mock('../src/utils/prisma.js', () => {
   const sources = [{
@@ -88,6 +89,27 @@ describe('News Domain API Endpoints (/api/v1)', () => {
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
       expect(res.body.data.id).toBe('evt-1');
+    });
+
+    it('returns paginated member articles for an event', async () => {
+      const res = await request(app).get('/api/v1/events/evt-1/articles?page=2&limit=3');
+      expect(res.status).toBe(200);
+      expect(res.body.pagination).toMatchObject({ page: 2, limit: 3, total: 1 });
+    });
+
+    it('returns 404 when requesting articles for an unknown event', async () => {
+      const res = await request(app).get('/api/v1/events/missing-event/articles');
+      expect(res.status).toBe(404);
+    });
+
+    it('protects event detection and requires researcher/admin role', async () => {
+      const anonymous = await request(app).post('/api/v1/events/detect').send({});
+      expect(anonymous.status).toBe(401);
+
+      const token = signToken({ userId: 'user-1', email: 'user@example.com', role: 'USER' });
+      const regularUser = await request(app).post('/api/v1/events/detect')
+        .set('Authorization', `Bearer ${token}`).send({});
+      expect(regularUser.status).toBe(403);
     });
   });
 

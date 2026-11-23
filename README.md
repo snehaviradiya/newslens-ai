@@ -49,8 +49,7 @@ Conventional media bias rating systems assign static political labels (e.g., "Le
 | +------------------+ |               +----------------------+
 | | Preprocessing    | |
 | +------------------+ |
-| | Hugging Face     | |
-| | Transformers     | |
+| | Rule-based NLP   | |
 | +------------------+ |
 | | Framing Analyzer | |
 | +------------------+ |
@@ -68,10 +67,10 @@ Conventional media bias rating systems assign static political labels (e.g., "Le
 | **Mobile Client** | React Native, Expo SDK 52, TypeScript, React Navigation | Cross-platform (iOS/Android) mobile delivery with type safety, 60fps animations, and fast iteration. |
 | **Backend API** | Node.js, Express.js | High-throughput asynchronous I/O and REST API orchestration. |
 | **Database & ORM** | PostgreSQL, Prisma ORM | Relational integrity with JSONB support for versioned analytical evidence payloads. |
-| **AI / NLP Engine** | Python 3.10+, FastAPI, Hugging Face Transformers | High-performance machine learning pipelines for NER, sentiment, and framing classification. |
+| **AI / NLP Engine** | Python 3.9+, FastAPI | Deterministic, rule-based text signals and evidence extraction; no pretrained model is currently integrated. |
 | **News Collection** | RSS / Atom feeds, News APIs | Multi-source automated ingestion with rate limiting and deduplication. |
 | **Authentication** | JWT (JSON Web Tokens), bcrypt | Secure, stateless authentication for user profiles and history. |
-| **Version Control** | Git, GitHub | Strict branch hygiene directly on `main` with 4–9 incremental, verified commits per development day. |
+| **Version Control** | Git, GitHub | Work directly on `main`; create no more than 2–3 meaningful, verified commits per day. |
 
 ---
 
@@ -113,7 +112,7 @@ The project strictly follows an 8-day development timeline from **19 November 20
 | **21 Nov 2026** | **Backend Architecture & Database Setup** | Express REST server, PostgreSQL schema, Prisma ORM, and JWT authentication. | Completed |
 | **22 Nov 2026** | **News Collection & Ingestion Pipeline** | RSS feed parsers, news API integrations, text extraction, and deduplication. | **Completed** |
 | **23 Nov 2026** | **AI/NLP Engine & Framing Analysis** | FastAPI service, text preprocessing, NER, sentiment, framing classification, and evidence citations. | **Completed** |
-| **24 Nov 2026** | **Related-Event Detection & Comparisons** | Semantic article clustering, event grouping, and cross-source comparative analysis. | Planned |
+| **24 Nov 2026** | **Related-Event Detection & Comparisons** | Lexical/date-based article grouping and evidence-grounded cross-source comparisons. | Implemented; sandbox-limited API verification |
 | **25 Nov 2026** | **End-to-End Integration & UI Polish** | Mobile-to-backend API wiring, interactive comparison reports, testing, and bug fixes. | Planned |
 | **26 Nov 2026** | **Final Testing, APK, Deployment & Freeze** | Regression testing, Android APK generation, final synchronization, academic submission, and project freeze. | Planned |
 

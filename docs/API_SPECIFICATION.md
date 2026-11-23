@@ -41,6 +41,9 @@ All requests and responses use `application/json` content type unless specified 
   - **Response 200 OK:** Paginated list of event clusters with multi-source perspective badges.
 - **`GET /api/v1/events/:id`**
   - **Description:** Retrieve an event cluster, member articles, and source distribution.
+- **`GET /api/v1/events/:id/articles?page=1&limit=20`** — Paginated articles assigned to an event.
+- **`POST /api/v1/events/detect`** (Researcher/Admin) — Optional body `{ "articleId": "..." }` to match one article, or `{ "limit": 100 }` to process ungrouped articles.
+- **`POST /api/v1/events/:id/compare`** — Optional body `{ "articleIds": ["...", "..."] }`; generates and persists rule-based comparisons between articles from distinct sources.
 
 ### 2.5 News Sources Management Endpoints
 - **`GET /api/v1/sources`**
@@ -65,7 +68,7 @@ All requests and responses use `application/json` content type unless specified 
   - **Description:** Retrieve single article metadata, extracted text, and associated source.
 - **`POST /api/v1/articles/analyze`**
   - **Body:** `{ "url": "https://..." }` or `{ "text": "..." }`
-  - **Description:** Submit article for framing analysis (returns 501 until Day 5 AI engine connection).
+  - **Description:** Pasted text is forwarded to the rule-based AI engine. URL-only input returns 501 because URL fetching is not implemented.
 
 ### 2.7 News Ingestion & Collection Endpoints
 - **`GET /api/v1/collection/status`**
@@ -82,6 +85,8 @@ All requests and responses use `application/json` content type unless specified 
 - `GET /api/v1/history` — Authenticated user's analysis/comparison history.
 
 Collection endpoints use `page` and `limit` query parameters. Data that has not been collected or analyzed is not fabricated.
+
+Event matching uses a 72-hour publication window and a configurable `EVENT_MATCH_THRESHOLD` (default `0.52`). A weighted lexical score combines headline similarity (30%), article-text similarity (30%), entities (20%), topics (10%), and publication-date proximity (10%), plus minimum-overlap gates. Matching is heuristic and does not establish semantic identity. Comparisons retain structured headline, entity, topic, quote, framing, evidence, similarity, limitation, and method metadata in `ArticleComparison`; snippets are included only when they occur in the corresponding stored article text. The system does not infer intent or deliberate omissions.
 
 ---
 

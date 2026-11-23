@@ -20,6 +20,39 @@ export interface NewsEvent {
   sources: string[]; // e.g. ['BBC', 'Reuters', 'CNN']
 }
 
+export interface ComparisonEvidence {
+  articleId: string;
+  sourceName: string;
+  kind: string;
+  excerpt: string;
+  frame?: string;
+  topic?: string;
+  speaker?: string;
+}
+
+export interface EventComparisonResult {
+  id: string;
+  eventId: string;
+  eventTitle: string;
+  eventDate: string;
+  articles: Array<{ id: string; headline: string; sourceName: string; publishedAt: string }>;
+  headlineComparison: {
+    articleA: { headline: string; sourceName: string; sentiment: number; sensationalism: number; evidence: string };
+    articleB: { headline: string; sourceName: string; sentiment: number; sensationalism: number; evidence: string };
+  };
+  sharedEntities: Array<{ name: string; typeA: string; typeB: string; mentionCountA: number; mentionCountB: number }>;
+  uniqueEntities: { articleA: string[]; articleB: string[] };
+  sharedTopics: string[];
+  uniqueTopics: { articleA: string[]; articleB: string[] };
+  quoteComparison: { shared: QuoteEvidence[]; uniqueArticleA: QuoteEvidence[]; uniqueArticleB: QuoteEvidence[] };
+  framingContrast: Array<{ frame: string; articleA: number; articleB: number; difference: number; evidenceA: string[]; evidenceB: string[] }>;
+  evidence: ComparisonEvidence[];
+  similarity: { score: number; method: string; evidence: Record<string, unknown> };
+  keyDivergencePoints: string[];
+  limitations: string[];
+  metadata: Record<string, unknown>;
+}
+
 export interface NewsArticle {
   id: string;
   sourceId: string;
