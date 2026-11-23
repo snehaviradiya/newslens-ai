@@ -1,3 +1,4 @@
+import html
 import re
 from typing import List, Tuple
 
@@ -16,15 +17,8 @@ def clean_html(text: str) -> str:
     text = re.sub(r"<script[^>]*>[\s\S]*?</script>", "", text, flags=re.IGNORECASE)
     # Remove HTML tags
     text = re.sub(r"<[^>]+>", " ", text)
-    # Decode entities
-    text = (
-        text.replace("&nbsp;", " ")
-        .replace("&amp;", "&")
-        .replace("&quot;", '"')
-        .replace("&#39;", "'")
-        .replace("&lt;", "<")
-        .replace("&gt;", ">")
-    )
+    # Decode all standard and numeric HTML entities.
+    text = html.unescape(text).replace("\xa0", " ")
     # Collapse multiple spaces while preserving newlines
     text = re.sub(r"[ \t]+", " ", text)
     return text.strip()
@@ -46,23 +40,77 @@ def segment_sentences(text: str) -> List[str]:
         return []
     # Clean text first
     cleaned = clean_html(text)
-    # Temporarily protect common abbreviations with periods
-    abbrevs = ["Dr.", "Mr.", "Mrs.", "Ms.", "Sen.", "Rep.", "Gov.", "Gen.", "Col.", "U.S.", "No.", "vs.", "e.g.", "i.e."]
+    # Temporarily protect abbreviations that contain sentence-terminal periods.
+    abbrevs = [
+        "Dr.", "Mr.", "Mrs.", "Ms.", "Sen.", "Rep.", "Gov.", "Gen.", "Col.",
+        "Lt.", "Prof.", "Rev.", "St.", "Mt.", "No.", "Nos.", "vs.", "e.g.",
+        "i.e.", "U.S.", "U.K.", "E.U.",
+    ]
     protected = cleaned
     for idx, abbr in enumerate(abbrevs):
-        protected = protected.replace(abbr, f"__ABBR_{idx}__")
+        protected = re.sub(re.escape(abbr), f"__ABBR_{idx}__", protected, flags=re.IGNORECASE)
 
-    # Split on sentence terminals (. ! ?) followed by whitespace or quote
-    raw_sentences = re.split(r'(?<=[.!?])\s+(?=[A-Z0-9"\'\‘\“])', protected)
+    # Protect common initials (J. Smith / J.K. Rowling) without changing real text.
+    protected = re.sub(r"\b([A-Z])\.", lambda m: f"{m.group(1)}__DOT__", protected)
+
+    # Split only at a terminal followed by whitespace and a new-sentence marker.
+    raw_sentences = re.split(r"(?<=[.!?])\s+(?=(?:['\"“‘]?)(?:[A-Z0-9]))", protected)
     sentences = []
     for s in raw_sentences:
         # Restore abbreviations
         for idx, abbr in enumerate(abbrevs):
             s = s.replace(f"__ABBR_{idx}__", abbr)
+        s = s.replace("__DOT__", ".")
         s_clean = s.strip()
         if len(s_clean) > 5:
             sentences.append(s_clean)
     return sentences
+
+
+def source_sentence_fragments(text: str) -> List[str]:
+    """Split source text into exact slices, retaining markup and original whitespace."""
+    if not text:
+        return []
+
+    working = text
+    abbreviations = [
+        "Dr.", "Mr.", "Mrs.", "Ms.", "Sen.", "Rep.", "Gov.", "Gen.", "Col.",
+        "Lt.", "Prof.", "Rev.", "St.", "Mt.", "No.", "Nos.", "vs.", "e.g.",
+        "i.e.", "U.S.", "U.K.", "E.U.",
+    ]
+    for abbreviation in abbreviations:
+        working = re.sub(
+            re.escape(abbreviation),
+            lambda match: match.group(0)[:-1] + "\uE000",
+            working,
+            flags=re.IGNORECASE,
+        )
+
+    # Keep offsets aligned while suppressing boundaries at initials.
+    working = re.sub(
+        r"\b([A-Z])\.",
+        lambda match: match.group(1) + "\uE002",
+        working,
+    )
+    boundaries = list(
+        re.finditer(
+            r'(?<=[.!?])(?=\s|$|</?(?:p|div|li|br)\b)',
+            working,
+            flags=re.IGNORECASE,
+        )
+    )
+    fragments: List[str] = []
+    start = 0
+    for boundary in boundaries:
+        end = boundary.start()
+        fragment = text[start:end].strip()
+        if fragment:
+            fragments.append(fragment)
+        start = boundary.end()
+    final_fragment = text[start:].strip()
+    if final_fragment:
+        fragments.append(final_fragment)
+    return fragments
 
 
 def preprocess_article(headline: str, content: str) -> Tuple[str, str, List[str]]:

@@ -6,7 +6,7 @@ Framing classification service based on communication science taxonomy:
 - Morality & Ethics Frame (moral duty, ethical judgment, religious or moral prescriptions)
 - Attribution of Responsibility Frame (attributing blame, responsibility, failure or credit to specific actors/institutions)
 """
-from typing import List, Dict, Tuple
+from typing import Dict, List, Optional, Tuple
 import re
 from app.schemas.analysis import FramingScores, EvidenceSnippet
 
@@ -54,7 +54,10 @@ FRAMING_MARKERS: Dict[str, Dict[str, any]] = {
 }
 
 
-def analyze_framing(sentences: List[str]) -> Tuple[FramingScores, List[EvidenceSnippet]]:
+def analyze_framing(
+    sentences: List[str],
+    evidence_sentences: Optional[List[Optional[str]]] = None,
+) -> Tuple[FramingScores, List[EvidenceSnippet]]:
     """
     Computes scores (0.0 to 1.0) across the 5 communication-science framing dimensions,
     extracting verbatim evidence sentences for high-scoring dimensions.
@@ -62,7 +65,7 @@ def analyze_framing(sentences: List[str]) -> Tuple[FramingScores, List[EvidenceS
     if not sentences:
         return FramingScores(conflict=0.0, economic=0.0, humanInterest=0.0, morality=0.0, responsibility=0.0), []
 
-    dim_hits: Dict[str, List[Tuple[str, str]]] = {
+    dim_hits: Dict[str, List[Tuple[str, str, str]]] = {
         "conflict": [],
         "economic": [],
         "human_interest": [],
@@ -70,13 +73,19 @@ def analyze_framing(sentences: List[str]) -> Tuple[FramingScores, List[EvidenceS
         "responsibility": []
     }
 
-    for sentence in sentences:
+    for index, sentence in enumerate(sentences):
+        source_sentence = (
+            evidence_sentences[index]
+            if evidence_sentences and index < len(evidence_sentences)
+            else sentence
+        )
         lower_sent = sentence.lower()
         for dim, config in FRAMING_MARKERS.items():
             for kw in config["keywords"]:
                 pattern = r'\b' + re.escape(kw) + r'\b'
                 if re.search(pattern, lower_sent):
-                    dim_hits[dim].append((sentence, kw))
+                    if source_sentence:
+                        dim_hits[dim].append((sentence, source_sentence, kw))
                     break
 
     total_sents = max(len(sentences), 1)
@@ -90,11 +99,11 @@ def analyze_framing(sentences: List[str]) -> Tuple[FramingScores, List[EvidenceS
         scores[dim] = round(score, 3)
 
         if hits:
-            for sent, kw in hits[:2]:
+            for _, source_sentence, kw in hits[:2]:
                 evidence.append(
                     EvidenceSnippet(
                         frame=f"{dim.replace('_', ' ').title()} Frame",
-                        excerpt=sent.strip(),
+                        excerpt=source_sentence,
                         location=f"Keyword '{kw}'"
                     )
                 )
