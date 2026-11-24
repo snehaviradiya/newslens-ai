@@ -6,7 +6,7 @@ import { ArticleAnalysis, NewsArticle, NewsEvent } from './models';
 export type MainTabParamList = {
   HomeTab: undefined;
   AnalyzeTab: { initialUrl?: string } | undefined;
-  CompareTab: { eventId?: string; articleAId?: string; articleBId?: string } | undefined;
+  CompareTab: { eventId?: string; comparisonId?: string; articleAId?: string; articleBId?: string } | undefined;
   HistoryTab: undefined;
   ProfileTab: undefined;
 };

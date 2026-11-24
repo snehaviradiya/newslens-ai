@@ -11,25 +11,34 @@ import { api } from '../services/api';
 export const ComparisonScreen: React.FC = () => {
   const route = useRoute<RouteProp<MainTabParamList, 'CompareTab'>>();
   const eventId = route.params?.eventId;
+  const comparisonId = route.params?.comparisonId;
   const [comparisons, setComparisons] = useState<EventComparisonResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | undefined>();
 
   const loadComparison = useCallback(async () => {
-    if (!eventId) {
+    if (!eventId && !comparisonId) {
       setComparisons([]);
       setError('Open an event and choose Compare Coverage to see its live comparison.');
       setLoading(false);
       setRefreshing(false);
       return;
     }
-    const result = await api.compareEvent(eventId);
-    setComparisons(result.data);
-    setError(result.error);
-    setLoading(false);
-    setRefreshing(false);
-  }, [eventId]);
+    try {
+      const result = comparisonId
+        ? [await api.getComparison(comparisonId)]
+        : await api.compareEvent(eventId!);
+      setComparisons(result);
+      setError(undefined);
+    } catch (comparisonError) {
+      setComparisons([]);
+      setError((comparisonError as Error).message || 'Comparison could not be generated.');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, [eventId, comparisonId]);
 
   useEffect(() => {
     setLoading(true);
@@ -49,7 +58,7 @@ export const ComparisonScreen: React.FC = () => {
         {error ? (
           <View style={styles.stateCard}>
             <Text style={styles.stateText}>{error}</Text>
-            {eventId ? <AppButton title="Retry comparison" onPress={retry} size="sm" /> : null}
+            {eventId || comparisonId ? <AppButton title="Retry comparison" onPress={retry} size="sm" /> : null}
           </View>
         ) : null}
         {!loading && !error && comparisons.length === 0 ? (

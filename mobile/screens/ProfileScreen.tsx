@@ -8,9 +8,9 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AppButton } from '../components/AppButton';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { COLORS, RADIUS, SHADOWS, SPACING, TYPOGRAPHY } from '../constants/theme';
-import { MOCK_USER } from '../constants/mockData';
 import { MainTabParamList, RootStackParamList } from '../types/navigation';
 import { api, API_BASE_URL, HealthStatus } from '../services/api';
+import { ApiUser } from '../types/models';
 
 type Props = {
   navigation: CompositeNavigationProp<
@@ -22,6 +22,10 @@ type Props = {
 export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
   const [healthStatus, setHealthStatus] = useState<HealthStatus | null>(null);
   const [checking, setChecking] = useState(false);
+  const [user, setUser] = useState<ApiUser | null>(api.getSessionUser());
+  const [historyCount, setHistoryCount] = useState(0);
+  const [comparisonCount, setComparisonCount] = useState(0);
+  const [profileError, setProfileError] = useState<string | undefined>();
 
   const checkStatus = async () => {
     setChecking(true);
@@ -31,10 +35,18 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   useEffect(() => {
-    checkStatus();
+    void checkStatus();
+    if (api.isAuthenticated()) {
+      Promise.all([api.getProfile(), api.getHistory()]).then(([profile, history]) => {
+        setUser(profile);
+        setHistoryCount(history.length);
+        setComparisonCount(history.filter((record) => Boolean(record.comparison)).length);
+      }).catch((error) => setProfileError((error as Error).message));
+    }
   }, []);
 
   const handleLogout = () => {
+    api.logout();
     // Return to onboarding/welcome using root parent navigator
     const parent = navigation.getParent<NativeStackNavigationProp<RootStackParamList>>();
     if (parent) {
@@ -57,13 +69,13 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
         {/* User Card */}
         <View style={styles.profileCard}>
           <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{MOCK_USER.name.slice(0, 2).toUpperCase()}</Text>
+            <Text style={styles.avatarText}>{user?.name.slice(0, 2).toUpperCase() || 'NL'}</Text>
           </View>
           <View style={styles.userInfo}>
-            <Text style={styles.userName}>{MOCK_USER.name}</Text>
-            <Text style={styles.userEmail}>{MOCK_USER.email}</Text>
+            <Text style={styles.userName}>{user?.name || 'Guest session'}</Text>
+            <Text style={styles.userEmail}>{user?.email || 'Sign in to access saved analyses and comparisons.'}</Text>
             <View style={styles.roleBadge}>
-              <Text style={styles.roleText}>{MOCK_USER.role.toUpperCase()}</Text>
+              <Text style={styles.roleText}>{(user?.role || 'GUEST').toUpperCase()}</Text>
             </View>
           </View>
         </View>
@@ -71,11 +83,11 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
         {/* Activity Summary */}
         <View style={styles.statsRow}>
           <View style={styles.statBox}>
-            <Text style={styles.statNumber}>{MOCK_USER.savedAnalysesCount}</Text>
+            <Text style={styles.statNumber}>{historyCount}</Text>
             <Text style={styles.statLabel}>Saved Analyses</Text>
           </View>
           <View style={styles.statBox}>
-            <Text style={styles.statNumber}>{MOCK_USER.comparedArticlesCount}</Text>
+            <Text style={styles.statNumber}>{comparisonCount}</Text>
             <Text style={styles.statLabel}>Compared Articles</Text>
           </View>
         </View>
@@ -95,7 +107,7 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
           <View style={styles.statusIndicatorRow}>
             <View style={[styles.statusDot, { backgroundColor: healthStatus?.backend ? COLORS.positive : COLORS.warning }]} />
             <Text style={styles.statusMessage}>
-              {healthStatus?.backend ? 'Backend service online' : 'Backend currently offline (Using mock data)'}
+              {healthStatus?.backend ? 'Backend service online' : 'Backend service offline'}
             </Text>
           </View>
 
@@ -107,6 +119,7 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
             size="sm"
             style={styles.recheckButton}
           />
+          {profileError ? <Text style={styles.profileError}>{profileError}</Text> : null}
         </View>
 
         {/* Academic Settings & Methodology */}
@@ -122,14 +135,14 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
           </View>
           <View style={styles.bulletRow}>
             <Text style={styles.bullet}>✦</Text>
-            <Text style={styles.bulletText}>Hugging Face transformer models scheduled for deployment on 23 Nov 2026.</Text>
+            <Text style={styles.bulletText}>Analysis uses deterministic rule-based signals; no pretrained model is integrated.</Text>
           </View>
         </View>
 
         {/* Logout Action */}
         <AppButton
-          title="Sign Out"
-          onPress={handleLogout}
+          title={user ? 'Sign Out' : 'Sign In'}
+          onPress={user ? handleLogout : () => navigation.getParent<NativeStackNavigationProp<RootStackParamList>>()?.navigate('Login')}
           variant="outline"
           size="md"
           style={styles.logoutButton}
@@ -276,6 +289,7 @@ const styles = StyleSheet.create({
     ...TYPOGRAPHY.bodySmall,
     color: COLORS.textSecondary,
   },
+  profileError: { color: COLORS.negative, marginTop: SPACING.sm, fontSize: 12 },
   recheckButton: {
     marginTop: SPACING.xs,
   },

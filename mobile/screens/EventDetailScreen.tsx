@@ -21,15 +21,20 @@ export const EventDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   const [error, setError] = useState<string | undefined>();
 
   const loadEvent = useCallback(async () => {
-    const [eventResult, articleResult] = await Promise.all([
-      api.getEvent(route.params.event.id),
-      api.getEventArticles(route.params.event.id),
-    ]);
-    if (eventResult.data) setEvent(eventResult.data);
-    setArticles(articleResult.data);
-    setError(eventResult.isLive && articleResult.isLive ? undefined : 'Could not load live event details. Pull to retry.');
-    setLoading(false);
-    setRefreshing(false);
+    try {
+      const [eventResult, articlesResult] = await Promise.all([
+        api.getEvent(route.params.event.id),
+        api.getEventArticles(route.params.event.id),
+      ]);
+      setEvent(eventResult);
+      setArticles(articlesResult);
+      setError(undefined);
+    } catch (loadError) {
+      setError((loadError as Error).message || 'Could not load event details. Pull to retry.');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
   }, [route.params.event.id]);
 
   useEffect(() => { void loadEvent(); }, [loadEvent]);
@@ -62,8 +67,10 @@ export const EventDetailScreen: React.FC<Props> = ({ route, navigation }) => {
               Compare articles grouped by the matching service. Differences are reported as text signals with source excerpts.
             </Text>
             <AppButton
-              title="Compare Reporting Angles →"
-              onPress={() => navigation.navigate('Main', { screen: 'CompareTab', params: { eventId: event.id } })}
+              title={api.isAuthenticated() ? 'Compare Reporting Angles →' : 'Sign in to Compare →'}
+              onPress={() => api.isAuthenticated()
+                ? navigation.navigate('Main', { screen: 'CompareTab', params: { eventId: event.id } })
+                : navigation.navigate('Login')}
               size="md"
               style={styles.compareButton}
             />

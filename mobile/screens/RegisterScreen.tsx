@@ -8,6 +8,7 @@ import { AppInput } from '../components/AppInput';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { COLORS, SPACING, TYPOGRAPHY } from '../constants/theme';
 import { RootStackParamList } from '../types/navigation';
+import { api } from '../services/api';
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Register'>;
@@ -20,6 +21,7 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [errors, setErrors] = useState<{ name?: string; email?: string; password?: string; confirmPassword?: string }>({});
   const [loading, setLoading] = useState(false);
+  const [serverError, setServerError] = useState<string | undefined>();
 
   const validate = (): boolean => {
     const newErrors: { name?: string; email?: string; password?: string; confirmPassword?: string } = {};
@@ -48,14 +50,19 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
     if (!validate()) return;
 
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+    setServerError(undefined);
+    try {
+      await api.register(name.trim(), email.trim(), password);
       navigation.replace('Main', { screen: 'HomeTab' });
-    }, 600);
+    } catch (error) {
+      setServerError((error as Error).message || 'Registration failed. Check your details and retry.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -133,6 +140,7 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
               size="lg"
               style={styles.submitButton}
             />
+            {serverError ? <Text style={styles.serverError}>{serverError}</Text> : null}
           </View>
 
           <View style={styles.footerRow}>
@@ -177,6 +185,7 @@ const styles = StyleSheet.create({
   submitButton: {
     marginTop: SPACING.md,
   },
+  serverError: { color: COLORS.negative, marginTop: SPACING.sm, fontSize: 13 },
   footerRow: {
     flexDirection: 'row',
     justifyContent: 'center',

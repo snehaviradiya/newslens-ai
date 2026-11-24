@@ -1,4 +1,5 @@
-// Realistic Editorial Mock Data for Day 2 Interface Demonstration
+// Synthetic development fixtures only. Story text and quotes are fictional.
+// The live API client and production screens do not import this file.
 
 import { ArticleAnalysis, ArticleComparison, NewsArticle, NewsEvent, NewsSource, UserProfile } from '../types/models';
 

@@ -79,7 +79,7 @@ export const WelcomeScreen: React.FC<Props> = ({ navigation }) => {
 
         <View style={styles.footerNotice}>
           <Text style={styles.footerText}>
-            Development Stage: Day 2 Mobile Scaffolding. Backend and AI engine integration scheduled for Nov 21 &amp; 23.
+            Rule-based article analysis, live news collection, event grouping, and evidence-backed comparisons.
           </Text>
         </View>
       </ScrollView>

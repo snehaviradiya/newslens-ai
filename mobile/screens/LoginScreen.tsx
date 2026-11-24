@@ -8,6 +8,7 @@ import { AppInput } from '../components/AppInput';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { COLORS, SPACING, TYPOGRAPHY } from '../constants/theme';
 import { RootStackParamList } from '../types/navigation';
+import { api } from '../services/api';
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Login'>;
@@ -18,6 +19,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
   const [loading, setLoading] = useState(false);
+  const [serverError, setServerError] = useState<string | undefined>();
 
   const validate = (): boolean => {
     const newErrors: { email?: string; password?: string } = {};
@@ -38,15 +40,19 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!validate()) return;
 
     setLoading(true);
-    // Simulate authentication handoff (Live JWT endpoint scheduled for Day 3)
-    setTimeout(() => {
-      setLoading(false);
+    setServerError(undefined);
+    try {
+      await api.login(email.trim(), password);
       navigation.replace('Main', { screen: 'HomeTab' });
-    }, 600);
+    } catch (error) {
+      setServerError((error as Error).message || 'Sign in failed. Check your credentials and retry.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -93,11 +99,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
               error={errors.password}
             />
 
-            <View style={styles.devNotice}>
-              <Text style={styles.devNoticeText}>
-                ℹ Note: Full JWT authentication endpoints will be connected on Day 3 (21 Nov). Any valid email/password combination will proceed in development mode.
-              </Text>
-            </View>
+            {serverError ? <Text style={styles.serverError}>{serverError}</Text> : null}
 
             <AppButton
               title="Sign In"
@@ -160,6 +162,7 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     lineHeight: 16,
   },
+  serverError: { color: COLORS.negative, marginBottom: SPACING.md, fontSize: 13 },
   submitButton: {
     marginTop: SPACING.sm,
   },

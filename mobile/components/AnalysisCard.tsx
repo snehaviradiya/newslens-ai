@@ -31,12 +31,9 @@ export const AnalysisCard: React.FC<AnalysisCardProps> = ({ analysis }) => {
     <View style={styles.container}>
       {analysis.isDemo ? (
         <View style={styles.demoNotice}>
-          <Text style={styles.demoNoticeText}>
-            ℹ Development Mode: Scaffolding interface. Live Hugging Face analysis models scheduled for Day 5 (23 Nov).
-          </Text>
+          <Text style={styles.demoNoticeText}>Synthetic development fixture — this is not a live article analysis.</Text>
         </View>
       ) : null}
-
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>Framing Dimension Spectrum</Text>
         <Text style={styles.sectionSubtitle}>
@@ -98,6 +95,47 @@ export const AnalysisCard: React.FC<AnalysisCardProps> = ({ analysis }) => {
               <Text style={styles.quoteBody}>"{q.quote}"</Text>
             </View>
           ))}
+        </View>
+      ) : null}
+
+      {analysis.entities?.length ? (
+        <View style={styles.evidenceSection}>
+          <Text style={styles.sectionTitle}>Extracted Entities</Text>
+          {analysis.entities.map((entity, index) => (
+            <Text key={`${entity.name}-${index}`} style={styles.detailLine}>
+              {entity.name} · {entity.type} · {entity.mentionCount} mention{entity.mentionCount === 1 ? '' : 's'} · {entity.stance}
+            </Text>
+          ))}
+        </View>
+      ) : null}
+
+      {analysis.topics?.length ? (
+        <View style={styles.evidenceSection}>
+          <Text style={styles.sectionTitle}>Topics</Text>
+          {analysis.topics.map((topic, index) => (
+            <Text key={`${topic.topic}-${index}`} style={styles.detailLine}>
+              {topic.topic} · {Math.round(topic.score * 100)}%{topic.supportingText ? ` · ${topic.supportingText}` : ''}
+            </Text>
+          ))}
+        </View>
+      ) : null}
+
+      {analysis.politicalSignals?.length ? (
+        <View style={styles.evidenceSection}>
+          <Text style={styles.sectionTitle}>Observed Political Signals</Text>
+          {analysis.politicalSignals.map((signal, index) => (
+            <View key={`${signal.signalType}-${index}`} style={styles.evidenceBox}>
+              <Text style={styles.detailLine}>{signal.signalType}: {signal.observation}</Text>
+              <Text style={styles.evidenceQuote}>“{signal.supportingExcerpt}”</Text>
+            </View>
+          ))}
+        </View>
+      ) : null}
+
+      {analysis.limitations?.length ? (
+        <View style={styles.evidenceSection}>
+          <Text style={styles.sectionTitle}>Method Limitations</Text>
+          {analysis.limitations.map((limitation, index) => <Text key={index} style={styles.detailLine}>• {limitation}</Text>)}
         </View>
       ) : null}
     </View>
@@ -250,5 +288,11 @@ const styles = StyleSheet.create({
     ...TYPOGRAPHY.bodySmall,
     color: COLORS.textSecondary,
     fontStyle: 'italic',
+  },
+  detailLine: {
+    ...TYPOGRAPHY.bodySmall,
+    color: COLORS.textSecondary,
+    marginTop: SPACING.xs,
+    lineHeight: 19,
   },
 });

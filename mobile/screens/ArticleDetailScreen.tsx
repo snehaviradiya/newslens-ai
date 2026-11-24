@@ -1,17 +1,44 @@
 // Article Detail Screen with Grounded Framing Decomposition
 
-import React from 'react';
-import { SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AnalysisCard } from '../components/AnalysisCard';
+import { AppButton } from '../components/AppButton';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { COLORS, RADIUS, SHADOWS, SPACING, TYPOGRAPHY } from '../constants/theme';
 import { RootStackParamList } from '../types/navigation';
+import { ArticleAnalysis } from '../types/models';
+import { api } from '../services/api';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ArticleDetail'>;
 
 export const ArticleDetailScreen: React.FC<Props> = ({ route, navigation }) => {
-  const { article, analysis } = route.params;
+  const { article } = route.params;
+  const [analysis, setAnalysis] = useState<ArticleAnalysis | undefined>(route.params.analysis);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | undefined>();
+
+  useEffect(() => {
+    let active = true;
+    api.getArticle(article.id).then((saved) => {
+      if (active && saved.analysis) setAnalysis(saved.analysis);
+    }).catch(() => undefined);
+    return () => { active = false; };
+  }, [article.id]);
+
+  const analyze = async () => {
+    setLoading(true);
+    setError(undefined);
+    try {
+      const saved = await api.analyzeStoredArticle(article.id);
+      setAnalysis(saved);
+    } catch (analysisError) {
+      setError((analysisError as Error).message || 'Analysis could not be saved. Sign in and retry.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -43,11 +70,20 @@ export const ArticleDetailScreen: React.FC<Props> = ({ route, navigation }) => {
         </View>
 
         {/* Embedded Analysis Card */}
-        {analysis ? (
-          <View style={styles.analysisSection}>
-            <AnalysisCard analysis={analysis} />
-          </View>
-        ) : null}
+        <View style={styles.analysisSection}>
+          {analysis ? <AnalysisCard analysis={analysis} /> : (
+            <View style={styles.analyzeBox}>
+              <Text style={styles.analyzeHint}>Generate and save an article analysis. Sign in is required.</Text>
+              <AppButton
+                title={api.isAuthenticated() ? 'Analyze and Save' : 'Sign in to Analyze'}
+                onPress={api.isAuthenticated() ? analyze : () => navigation.navigate('Login')}
+                loading={loading}
+              />
+              {error ? <Text style={styles.errorText}>{error}</Text> : null}
+            </View>
+          )}
+          {loading ? <ActivityIndicator color={COLORS.primary} /> : null}
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -119,4 +155,13 @@ const styles = StyleSheet.create({
   analysisSection: {
     width: '100%',
   },
+  analyzeBox: {
+    backgroundColor: COLORS.surface,
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    padding: SPACING.md,
+  },
+  analyzeHint: { ...TYPOGRAPHY.bodySmall, color: COLORS.textSecondary, marginBottom: SPACING.sm },
+  errorText: { ...TYPOGRAPHY.bodySmall, color: COLORS.negative, marginTop: SPACING.sm },
 });

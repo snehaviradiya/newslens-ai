@@ -7,6 +7,7 @@ export interface NewsSource {
   country: string;
   category: string;
   articleCount?: number;
+  rssFeedUrl?: string | null;
 }
 
 export interface NewsEvent {
@@ -77,9 +78,10 @@ export interface FramingBreakdown {
 
 export interface EntityEvidence {
   name: string;
-  type: 'PERSON' | 'ORG' | 'GPE' | 'EVENT';
+  type: string;
   mentionCount: number;
-  stance: 'Supportive' | 'Critical' | 'Neutral';
+  stance: string;
+  evidence?: string;
 }
 
 export interface QuoteEvidence {
@@ -91,6 +93,7 @@ export interface QuoteEvidence {
 export interface TextEvidenceExcerpt {
   frame: string;
   excerpt: string;
+  location?: string;
 }
 
 export interface ArticleAnalysis {
@@ -101,13 +104,32 @@ export interface ArticleAnalysis {
   analyzedAt: string;
   headlineSentiment: number;    // -1.0 to 1.0
   headlineSensationalism: number; // 0.0 to 1.0
-  overallTone: 'Neutral' | 'Critical' | 'Advocating' | 'Alarmist' | 'Balanced';
+  overallTone: string;
   subjectivityScore: number;     // 0.0 (Objective) - 1.0 (Subjective)
   framingScores: FramingBreakdown;
   entities: EntityEvidence[];
   quotes: QuoteEvidence[];
   supportingEvidence: TextEvidenceExcerpt[];
+  topics?: Array<{ topic: string; score: number; supportingText?: string }>;
+  politicalSignals?: Array<{ signalType: string; observation: string; supportingExcerpt: string }>;
+  limitations?: string[];
+  metadata?: Record<string, unknown>;
   isDemo?: boolean;
+}
+
+export interface ApiUser {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  createdAt?: string;
+}
+
+export interface HistoryRecord {
+  id: string;
+  createdAt: string;
+  article?: NewsArticle & { analysis?: ArticleAnalysis };
+  comparison?: EventComparisonResult;
 }
 
 export interface ArticleComparison {

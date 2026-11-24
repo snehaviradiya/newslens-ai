@@ -28,17 +28,17 @@ export const AnalysisScreen: React.FC = () => {
       setError('Article URL must begin with http:// or https://');
       return;
     }
+    if (url.trim() && !text.trim()) {
+      setError('URL-only fetching is not available. Open a collected article or paste its text to analyze.');
+      return;
+    }
 
     setError(undefined);
     setLoading(true);
 
     try {
-      const res = await api.analyzeArticle({ url: url.trim(), text: text.trim() });
-      if (!res.isLive || !res.analysis) {
-        setError(res.error || 'Analysis service is unavailable. Please retry.');
-      } else {
-        setResult(res.analysis);
-      }
+      const analysis = await api.analyzeArticle({ url: url.trim() || undefined, text: text.trim() || undefined });
+      setResult(analysis);
     } catch {
       setError('An error occurred during analysis. Please try again.');
     } finally {
@@ -115,7 +115,7 @@ export const AnalysisScreen: React.FC = () => {
 
               <View style={styles.scheduleNote}>
                 <Text style={styles.scheduleNoteText}>
-                  Development Status: Day 2 UI implementation. Python FastAPI NLP Engine and Hugging Face transformer pipeline will be connected on Day 5 (23 Nov).
+                  Pasted text is analyzed with deterministic rule-based signals and is not saved to history. Open a collected article to generate a saved analysis.
                 </Text>
               </View>
             </View>

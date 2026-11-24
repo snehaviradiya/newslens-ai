@@ -8,8 +8,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ArticleCard } from '../components/ArticleCard';
 import { NewsSourceCard } from '../components/NewsSourceCard';
 import { COLORS, RADIUS, SHADOWS, SPACING, TYPOGRAPHY } from '../constants/theme';
-import { MOCK_ARTICLES, MOCK_SOURCES } from '../constants/mockData';
-import { NewsArticle, NewsEvent, NewsSource } from '../types/models';
+import { HistoryRecord, NewsArticle, NewsEvent, NewsSource } from '../types/models';
 import { MainTabParamList, RootStackParamList } from '../types/navigation';
 import { api } from '../services/api';
 
@@ -23,8 +22,10 @@ type Props = {
 export const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const [events, setEvents] = useState<NewsEvent[]>([]);
   const [eventError, setEventError] = useState<string | undefined>();
-  const [sources, setSources] = useState<NewsSource[]>(MOCK_SOURCES);
-  const [articles, setArticles] = useState<NewsArticle[]>(MOCK_ARTICLES);
+  const [sources, setSources] = useState<NewsSource[]>([]);
+  const [articles, setArticles] = useState<NewsArticle[]>([]);
+  const [recentHistory, setRecentHistory] = useState<HistoryRecord[]>([]);
+  const [feedError, setFeedError] = useState<string | undefined>();
   const [refreshing, setRefreshing] = useState(false);
   const [isBackendConnected, setIsBackendConnected] = useState(false);
 
@@ -32,15 +33,17 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
     const health = await api.checkBackendHealth();
     setIsBackendConnected(health.backend);
 
-    const eventResult = await api.getEvents();
+    const [eventResult, sourceResult, articleResult] = await Promise.all([
+      api.getEvents(), api.getSources().then((data) => ({ data })).catch((error) => ({ data: [], error: (error as Error).message })),
+      api.getArticles({ limit: 6 }).then((data) => ({ data })).catch((error) => ({ data: [], error: (error as Error).message })),
+    ]);
     setEvents(eventResult.data);
     setEventError(eventResult.error);
-
-    const sourceResult = await api.getSources();
     setSources(sourceResult.data);
-
-    const articleResult = await api.getArticles({ limit: 6 });
     setArticles(articleResult.data);
+    setFeedError(('error' in sourceResult ? sourceResult.error : undefined) || ('error' in articleResult ? articleResult.error : undefined));
+    const history = api.isAuthenticated() ? await api.getHistory().catch(() => []) : [];
+    setRecentHistory(history.slice(0, 3));
   };
 
   useEffect(() => {
@@ -82,7 +85,9 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
         <View style={styles.eventFooter}>
           <TouchableOpacity
-            onPress={() => navigation.navigate('CompareTab', { eventId: event.id })}
+            onPress={() => api.isAuthenticated()
+              ? navigation.navigate('CompareTab', { eventId: event.id })
+              : navigation.navigate('Login')}
             style={styles.compareButton}
           >
             <Text style={styles.compareButtonText}>Compare Coverage Perspectives →</Text>
@@ -107,7 +112,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
           <View style={[styles.statusBadge, { backgroundColor: isBackendConnected ? COLORS.positiveLight : COLORS.warningLight }]}>
             <View style={[styles.statusDot, { backgroundColor: isBackendConnected ? COLORS.positive : COLORS.warning }]} />
             <Text style={[styles.statusText, { color: isBackendConnected ? COLORS.positive : COLORS.warning }]}>
-              {isBackendConnected ? 'API Live' : 'Demo Mode'}
+              {isBackendConnected ? 'API Live' : 'API Offline'}
             </Text>
           </View>
         </View>
@@ -117,7 +122,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
           <View style={styles.bannerContent}>
             <Text style={styles.bannerTitle}>Inspect Any News Article</Text>
             <Text style={styles.bannerSubtitle}>
-              Paste any article link or body text to evaluate headline sensationalism, conflict framing, and entity quotes.
+              Paste text for a transient rule-based analysis, or open a collected article to save its analysis to your history.
             </Text>
             <TouchableOpacity
               activeOpacity={0.8}
@@ -161,11 +166,11 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
         <View style={[styles.sectionHeader, { marginTop: SPACING.xl }]}>
           <Text style={styles.sectionTitle}>Recent Article Inspections</Text>
           <Text style={styles.sectionMeta}>
-            {isBackendConnected ? 'Ingested multi-source news coverage' : 'Evidence-grounded linguistic analysis examples'}
+            {isBackendConnected ? 'Articles collected from configured feeds' : 'Live backend required'}
           </Text>
         </View>
         {articles.length === 0 ? (
-          <Text style={styles.sourcesLabel}>No ingested articles available.</Text>
+          <Text style={styles.sourcesLabel}>{feedError || 'No collected articles are available yet.'}</Text>
         ) : (
           articles.map((article) => (
             <ArticleCard
@@ -176,6 +181,21 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
             />
           ))
         )}
+
+        {recentHistory.some((record) => record.article?.analysis) ? (
+          <>
+            <View style={[styles.sectionHeader, { marginTop: SPACING.md }]}>
+              <Text style={styles.sectionTitle}>Recent Saved Analyses</Text>
+              <Text style={styles.sectionMeta}>Your authenticated analysis history</Text>
+            </View>
+            {recentHistory.filter((record) => record.article?.analysis).map((record) => (
+              <TouchableOpacity key={record.id} style={styles.eventCard} onPress={() => navigation.navigate('ArticleDetail', { article: record.article!, analysis: record.article!.analysis })}>
+                <Text style={styles.eventTitle}>{record.article?.title}</Text>
+                <Text style={styles.eventSummary}>{record.article?.sourceName} · {record.article?.analysis?.overallTone}</Text>
+              </TouchableOpacity>
+            ))}
+          </>
+        ) : null}
       </ScrollView>
     </SafeAreaView>
   );
