@@ -242,3 +242,30 @@ Build a modular FastAPI service inside `ai-engine/` that reports rule-based text
 - Event detection is lexical and date-based rather than semantic. It has a 200-candidate cap and can miss paraphrases or connect stories with overlapping terms.
 - Comparison evidence depends on article text retained by RSS ingestion, which can be truncated summaries. Comparisons require at least two articles from distinct sources.
 - Mobile API response mapping has typecheck coverage but no dedicated automated mobile test harness yet.
+
+---
+
+## Day 7: 25 November 2026 — Full-Stack Integration & Mobile Completion
+
+### Implemented
+- Added authenticated analysis for collected articles. The backend forwards the stored article headline/content/source to FastAPI, upserts `ArticleAnalysis`, and creates an idempotent user history link. Added a validated batch endpoint for 1–20 stored article IDs, processed sequentially.
+- Authenticated comparison generation now links generated comparisons and their analyzed articles to user history. Public registration ignores client-supplied roles; only addresses configured in the server-side `RESEARCHER_EMAILS` allowlist can self-register as `RESEARCHER`.
+- Replaced mobile demo login/register with backend JWT calls; maps database article/source/event/analysis/comparison/history responses to app types; removed mock API fallbacks from the live app flow; added live article analyze-and-save and reopen-history paths.
+- Extended the analysis card to render entities, topics, observed political signals, and limitations. Pasted-text analysis remains transient; URL-only fetching remains unsupported.
+- Added Android EAS APK profiles and documented the reproducible demo workflow.
+
+### Verification (25 November 2026)
+- AI pytest: `PYTHONPATH=. .venv/bin/pytest tests -q` — **27 passed**.
+- Focused backend service/API-contract tests — **16 passed** in 5 suites.
+- Complete backend Jest suite — **70 passed** in 11 suites, run with loopback permission (including mobile API response mapping tests).
+- Backend TypeScript typecheck/build — **passed**.
+- Mobile TypeScript check — **passed**.
+- `npx expo export --platform android --output-dir /tmp/newslens-day7-android-export` — **passed** (Android JS bundle; not an APK).
+- Prisma client generation and schema validation — **passed**. Live database migration status and the end-to-end database flow remain unverified.
+- Installing Expo SecureStore was attempted but npm registry access failed (`ENOTFOUND registry.npmjs.org`). The current mobile JWT is held in memory and is lost when the app process exits.
+- Expo public configuration validation and the APK profile JSON check passed. A live PostgreSQL migration check failed because no PostgreSQL server is reachable at the configured local address.
+- `git diff --check` passed. Commit and remote push verification are pending at this log entry.
+
+### Remaining Limitations
+- Secure token persistence, physical-device/installed APK verification, live PostgreSQL migration, live RSS ingestion, and a full connected mobile-to-AI-to-database demonstration still need environment access and final verification.
+- Mobile API field mappings have three Jest contract tests in the backend test suite; the mobile app still has no standalone Jest harness.

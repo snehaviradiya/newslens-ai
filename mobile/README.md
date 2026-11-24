@@ -6,22 +6,22 @@ The application delivers an editorial, evidence-grounded news intelligence inter
 
 ---
 
-## 1. Implemented Features & Screens (Day 2 Milestone)
+## 1. Implemented Features & Screens (Day 7 Integration)
 
-The Day 2 mobile foundation includes a complete, navigable screen suite and modular design system:
+The client now connects its news, event, comparison, account, and history workflows to the backend. UI components remain in the existing design system:
 
 | Screen | File Path | Description |
 |---|---|---|
 | **Welcome Screen** | `screens/WelcomeScreen.tsx` | Editorial onboarding and application branding with pathways to exploration and sign-in. |
 | **Login Screen** | `screens/LoginScreen.tsx` | Secure login interface with client-side form validation (email format, password length). |
 | **Registration Screen** | `screens/RegisterScreen.tsx` | Account registration interface with password matching and field validation. |
-| **Home Dashboard** | `screens/HomeScreen.tsx` | Real-time newsroom feed displaying shared event clusters, monitored publication badges, and fast analysis triggers. |
-| **Framing Analysis Screen** | `screens/AnalysisScreen.tsx` | Direct URL and text input interface with interactive framing dimension breakdowns and cited paragraph excerpts. |
-| **Perspective Comparison Screen** | `screens/ComparisonScreen.tsx` | Side-by-side comparative layout contrasting headlines, framing dimensions, and quoted stakeholders across competing outlets. |
-| **Analysis History Screen** | `screens/HistoryScreen.tsx` | Chronological archive of inspected stories with metric badges and empty state handling. |
-| **Research Profile Screen** | `screens/ProfileScreen.tsx` | User credentials, research activity statistics, and live backend connection diagnostics. |
-| **Event Detail Screen** | `screens/EventDetailScreen.tsx` | Multi-source event clusters detailing all articles covering an event with cross-comparison links. |
-| **Article Detail Screen** | `screens/ArticleDetailScreen.tsx` | Deep article reader with embedded evidence-grounded framing metrics. |
+| **Home Dashboard** | `screens/HomeScreen.tsx` | Live collected articles, sources, events, recent signed-in analyses, refresh and empty/error states. |
+| **Framing Analysis Screen** | `screens/AnalysisScreen.tsx` | Transient analysis for pasted text; URL fetching is explicitly unsupported. |
+| **Perspective Comparison Screen** | `screens/ComparisonScreen.tsx` | Live persisted comparison results with headlines, entities, topics, quotes, framing excerpts and limitations. |
+| **Analysis History Screen** | `screens/HistoryScreen.tsx` | Authenticated history with links to stored article analyses and comparisons. |
+| **Research Profile Screen** | `screens/ProfileScreen.tsx` | Authenticated backend profile, history counts, connection status, and sign-out. |
+| **Event Detail Screen** | `screens/EventDetailScreen.tsx` | Live event members, source diversity, and comparison navigation. |
+| **Article Detail Screen** | `screens/ArticleDetailScreen.tsx` | Live article content, stored analysis, and authenticated analyze-and-save action. |
 
 ---
 
@@ -64,7 +64,7 @@ cp .env.example .env
   EXPO_PUBLIC_API_BASE_URL=http://192.168.1.50:3000
   ```
 
-> **Standalone Fallback:** When the backend server is offline or unreachable, the mobile client gracefully falls back to realistic mock editorial datasets so UI demonstration and visual testing remain functional.
+The client does not replace failed news, event, comparison, or analysis requests with fixtures. API failures show an error or empty state. The auth token is held in memory for the current app session; secure device storage could not be added because npm registry access was unavailable in this environment, so reopening the app requires signing in again.
 
 ---
 
@@ -97,12 +97,25 @@ From the interactive terminal menu:
 
 To verify application health and build consistency:
 ```sh
-# 1. Run Expo Doctor health check (18/18 checks pass)
+# 1. Run Expo Doctor checks
 npx expo-doctor
 
 # 2. Run TypeScript compiler check
 npx tsc --noEmit
 
-# 3. Test multi-platform bundle compilation (iOS, Android, Web)
-npx expo export --output-dir /tmp/expo-verify && rm -rf /tmp/expo-verify
+# 3. Test Android bundle compilation
+npx expo export --platform android --output-dir /tmp/newslens-expo-verify
 ```
+
+## Demonstration workflow
+
+1. Start PostgreSQL, apply `backend/prisma/migrations`, and configure the backend and AI engine URLs.
+2. Set `RESEARCHER_EMAILS` to an address allowed to register with the researcher role, register that address in the app, then start RSS collection with the protected collection endpoint or scheduler.
+3. Sign in, open a collected article, and choose **Analyze and Save**. The backend stores the rule-based analysis and adds it to your history.
+4. Open an event with articles from at least two sources and choose **Compare Coverage**. The comparison and the signed-in user's history entry are persisted.
+
+Pasted-text analyses are transient and do not appear in saved history. URL-only analysis is not implemented. Physical-device builds must set `EXPO_PUBLIC_API_BASE_URL` to a reachable HTTPS or LAN backend URL.
+
+## Android APK build profile
+
+`eas.json` defines `preview` and `production` APK profiles. To build after EAS CLI access and account setup are available, run `eas build --platform android --profile preview`. The Android bundle export verified during development is a JavaScript bundle check, not an APK build or installation test.

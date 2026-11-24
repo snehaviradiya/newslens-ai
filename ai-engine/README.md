@@ -125,4 +125,4 @@ Accepts `textA` and `textB`, and returns a score from token-frequency cosine sim
 
 ## Integration with Express Backend
 
-The Express backend (`backend/src/config/env.ts`) configures `AI_ENGINE_URL` (default: `http://localhost:8000`) and a request timeout. Its article analysis route forwards text to `POST /api/v1/analyze` and returns the response. It currently does not persist the result to Prisma `ArticleAnalysis`; URL-only article fetching is also not implemented.
+The Express backend (`backend/src/config/env.ts`) configures `AI_ENGINE_URL` (default: `http://localhost:8000`) and a request timeout. Authenticated analysis of a stored article forwards text to `POST /api/v1/analyze`, upserts the result in Prisma `ArticleAnalysis`, and records it in the user's `AnalysisHistory`. Pasted-text analysis is transient. URL-only article fetching is not implemented. Backend batch analysis processes up to 20 stored articles sequentially.

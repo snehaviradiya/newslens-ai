@@ -43,7 +43,7 @@ All requests and responses use `application/json` content type unless specified 
   - **Description:** Retrieve an event cluster, member articles, and source distribution.
 - **`GET /api/v1/events/:id/articles?page=1&limit=20`** — Paginated articles assigned to an event.
 - **`POST /api/v1/events/detect`** (Researcher/Admin) — Optional body `{ "articleId": "..." }` to match one article, or `{ "limit": 100 }` to process ungrouped articles.
-- **`POST /api/v1/events/:id/compare`** — Optional body `{ "articleIds": ["...", "..."] }`; generates and persists rule-based comparisons between articles from distinct sources.
+- **`POST /api/v1/events/:id/compare`** (Authenticated) — Optional body `{ "articleIds": ["...", "..."] }`; generates and persists rule-based comparisons between articles from distinct sources and adds them to the user's history.
 
 ### 2.5 News Sources Management Endpoints
 - **`GET /api/v1/sources`**
@@ -69,6 +69,8 @@ All requests and responses use `application/json` content type unless specified 
 - **`POST /api/v1/articles/analyze`**
   - **Body:** `{ "url": "https://..." }` or `{ "text": "..." }`
   - **Description:** Pasted text is forwarded to the rule-based AI engine. URL-only input returns 501 because URL fetching is not implemented.
+- **`POST /api/v1/articles/:id/analyze`** (Authenticated) — Analyzes an existing collected article, upserts `ArticleAnalysis`, and records the article in the user's history.
+- **`POST /api/v1/articles/analyze/batch`** (Authenticated) — Body `{ "articleIds": ["...", "..."] }`, 1–20 unique stored article IDs; analyzes and persists each sequentially.
 
 ### 2.7 News Ingestion & Collection Endpoints
 - **`GET /api/v1/collection/status`**
@@ -82,7 +84,7 @@ All requests and responses use `application/json` content type unless specified 
 - `GET /api/v1/analyses/:id` — One stored article analysis.
 - `GET /api/v1/comparisons` — Paginated stored comparisons.
 - `GET /api/v1/comparisons/:id` — One stored comparison.
-- `GET /api/v1/history` — Authenticated user's analysis/comparison history.
+- `GET /api/v1/history` — Authenticated user's paginated analysis/comparison history with linked article analyses and comparison details.
 
 Collection endpoints use `page` and `limit` query parameters. Data that has not been collected or analyzed is not fabricated.
 

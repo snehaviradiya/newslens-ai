@@ -135,16 +135,17 @@ NewsLens AI is architected as a decoupled, multi-tier system composed of a clien
 
 ### 3.3 Side-by-Side Cross-Source Comparison
 ```
-[Mobile Client: Request Comparison of Article A & Article B]
+[Mobile Client: Authenticated comparison request for an event]
    |
    v
-[Backend: /api/v1/comparisons?articleA=...&articleB=...]
+[Backend: POST /api/v1/events/:id/compare]
    |
    +---> Fetches analyses of Article A and Article B
    +---> Calculates Headline Divergence
    +---> Calculates Framing Differences & Tone Contrast
    +---> Compares Quoted Stakeholders (Overlap vs Unique)
    +---> Assembles Evidence-Backed Comparison Matrix
+   +---> Persists comparison and authenticated history record
    |
    v
 [Mobile UI Renders Interactive Side-by-Side Visualization]

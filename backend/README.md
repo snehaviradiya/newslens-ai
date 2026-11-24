@@ -49,6 +49,8 @@ npm run prisma:migrate:deploy
 - `GET /api/v1/articles` — supports `search`, `sourceId`, `startDate`, `endDate`, `sortBy`, `sortOrder`, pagination
 - `GET /api/v1/articles/:id`
 - `POST /api/v1/articles/analyze` — forwards article text to the AI engine
+- `POST /api/v1/articles/:id/analyze` — authenticated; persists analysis and user history
+- `POST /api/v1/articles/analyze/batch` — authenticated; analyzes up to 20 stored article IDs sequentially
 - `GET /api/v1/collection/status` — current ingestion job state and last run metadata
 - `POST /api/v1/collection/run` — trigger manual collection cycle across active sources (`RESEARCHER` or `ADMIN`)
 - `GET /api/v1/events`
@@ -67,6 +69,8 @@ npm run prisma:migrate:deploy
 Newly ingested articles are checked against articles published within 72 hours. Matching combines headline token Dice similarity (30%), article text similarity (30%), entity overlap (20%), topic overlap (10%), and date proximity (10%). The configurable `EVENT_MATCH_THRESHOLD` defaults to `0.52` (valid range `0.1`–`1`). A match also requires minimum headline and text overlap, or at least two shared entities plus a shared topic. The candidate pool is capped at 200 recent articles. Unmatched articles remain ungrouped. These are lexical heuristics, not semantic understanding; same-person mentions alone do not create a match.
 
 Comparisons reuse saved article analysis or request and persist a new rule-based analysis. They compare headline indicators, extracted entity/topic overlap, verbatim attributed quotes, and framing scores with excerpts copied only when present in the stored article text. They do not infer intent or deliberate omission. Apply the new migration with `npx prisma migrate deploy` before using persistence against an existing database.
+
+Public registration always creates a `USER`. Set `RESEARCHER_EMAILS` to a comma-separated allowlist of addresses that may self-register as `RESEARCHER`; client-supplied role values are ignored. The JWT used by the mobile client is currently held in memory for that app session.
 
 ## RSS Ingestion & Collection Pipeline
 

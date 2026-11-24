@@ -81,7 +81,7 @@ newslens-ai/
 ├── mobile/                     # React Native / Expo mobile application (Completed: 20 Nov)
 │   ├── app/                    # Configuration and entry point
 │   ├── components/             # Reusable UI system (AppButton, AppInput, Cards, etc.)
-│   ├── constants/              # Theme tokens and realistic editorial mock datasets
+│   ├── constants/              # Theme tokens and explicitly labelled demo fixtures
 │   ├── navigation/             # Native Stack and Bottom Tab navigators
 │   ├── screens/                # Core screens (Welcome, Login, Home, Analyze, Compare, etc.)
 │   ├── services/               # Centralized API service and health diagnostics
@@ -113,7 +113,7 @@ The project strictly follows an 8-day development timeline from **19 November 20
 | **22 Nov 2026** | **News Collection & Ingestion Pipeline** | RSS feed parsers, news API integrations, text extraction, and deduplication. | **Completed** |
 | **23 Nov 2026** | **AI/NLP Engine & Framing Analysis** | FastAPI service, text preprocessing, NER, sentiment, framing classification, and evidence citations. | **Completed** |
 | **24 Nov 2026** | **Related-Event Detection & Comparisons** | Lexical/date-based article grouping and evidence-grounded cross-source comparisons. | Implemented; sandbox-limited API verification |
-| **25 Nov 2026** | **End-to-End Integration & UI Polish** | Mobile-to-backend API wiring, interactive comparison reports, testing, and bug fixes. | Planned |
+| **25 Nov 2026** | **End-to-End Integration & UI Polish** | Mobile-to-backend workflows, saved analysis history, tests, and deployment readiness. | Implemented; live database/APK verification remains |
 | **26 Nov 2026** | **Final Testing, APK, Deployment & Freeze** | Regression testing, Android APK generation, final synchronization, academic submission, and project freeze. | Planned |
 
 > **Final Deadline Note:** No code modifications, feature additions, documentation changes, or git commits are permitted after **26 November 2026**.

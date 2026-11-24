@@ -107,7 +107,7 @@ The project follows a disciplined day-by-day development schedule. Each day is d
 ---
 
 ### Day 7: 25 November 2026 — End-to-End Integration, Interactive Reports & UI Polish
-- **Focus:** Mobile client integration with backend APIs, real-time data flow, testing, and debugging.
+- **Focus:** Complete authenticated article analysis/history, live event/comparison mobile flows, API contract validation, and final-day deployment preparation.
 - **Objectives:**
   - Connect mobile application services to live Express backend endpoints.
   - Implement dynamic state rendering for real-time article analyses and event comparisons.
@@ -115,8 +115,8 @@ The project follows a disciplined day-by-day development schedule. Each day is d
   - Perform comprehensive end-to-end integration testing and bug fixes.
   - Polish UI interactions, error states, and empty states.
 - **Verification:**
-  - Mobile app fetches live backend data and renders interactive framing reports seamlessly.
-  - All critical user flows pass manual and automated integration checks.
+  - Backend and mobile typechecks, AI/backend tests, Prisma generation/validation, and Expo Android bundle export.
+  - Full live PostgreSQL/physical-device/APK flow remains for final-day verification if those services are available.
 
 ---
 
