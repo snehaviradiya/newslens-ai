@@ -55,6 +55,14 @@ describe('Authentication API Endpoints (/api/v1/auth)', () => {
     authToken = res.body.data.token;
   });
 
+  it('does not allow public registration to assign privileged roles', async () => {
+    const res = await request(app).post('/api/v1/auth/register').send({
+      name: 'New Researcher', email: 'new@example.com', password: 'password123', role: 'ADMIN',
+    });
+    expect(res.status).toBe(201);
+    expect(res.body.data.user.role).toBe('USER');
+  });
+
   it('POST /api/v1/auth/register should reject duplicate email registrations with 409', async () => {
     const res = await request(app)
       .post('/api/v1/auth/register')

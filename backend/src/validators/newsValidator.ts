@@ -62,6 +62,12 @@ export const compareEventSchema = z.object({
   message: 'Article IDs must be unique.',
 });
 
+export const analyzeBatchSchema = z.object({
+  articleIds: z.array(z.string().min(1)).min(1).max(20),
+}).refine((value) => new Set(value.articleIds).size === value.articleIds.length, {
+  message: 'Article IDs must be unique.',
+});
+
 export const analyzeArticleInputSchema = z.object({
   url: z.string().url('Must provide a valid article web URL').optional(),
   text: z.string().min(20, 'Article text must be at least 20 characters').optional(),

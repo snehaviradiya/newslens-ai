@@ -3,7 +3,8 @@
 import { NextFunction, Request, Response } from 'express';
 import { newsService } from '../services/newsService.js';
 import { analysisService } from '../services/analysisService.js';
-import { articleFilterSchema, idParamSchema, analyzeArticleInputSchema } from '../validators/newsValidator.js';
+import { AuthenticatedRequest } from '../middleware/authMiddleware.js';
+import { analyzeBatchSchema, articleFilterSchema, idParamSchema, analyzeArticleInputSchema } from '../validators/newsValidator.js';
 
 export const articleController = {
   // GET /api/v1/articles
@@ -55,6 +56,26 @@ export const articleController = {
       const headline = input.headline || input.text.split(/\s+/).slice(0, 12).join(' ');
       const data = await analysisService.analyzeText(headline, input.text);
       res.status(200).json({ success: true, data });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  analyzeStoredArticle: async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { id } = idParamSchema.parse(req.params);
+      const data = await analysisService.analyzeArticle(id, req.user!.userId);
+      res.status(200).json({ success: true, data });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  analyzeStoredArticles: async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { articleIds } = analyzeBatchSchema.parse(req.body);
+      const analyses = await analysisService.analyzeArticles(articleIds, req.user!.userId);
+      res.status(200).json({ success: true, data: analyses });
     } catch (error) {
       next(error);
     }

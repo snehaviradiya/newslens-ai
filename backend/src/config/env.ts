@@ -16,6 +16,7 @@ const envSchema = z.object({
       : 'development-only-secret-change-before-production'
   ),
   JWT_EXPIRES_IN: z.string().default('7d'),
+  RESEARCHER_EMAILS: z.string().default(''),
   DATABASE_URL: z.string().optional(),
   AI_ENGINE_URL: z.string().default('http://localhost:8000'),
   EVENT_MATCH_THRESHOLD: z.string().default('0.52').transform((value) => {

@@ -202,7 +202,7 @@ const hydrateComparison = (row: any) => ({
 });
 
 export const comparisonGenerationService = {
-  compareEvent: async (eventId: string, requestedIds?: string[]) => {
+  compareEvent: async (eventId: string, requestedIds?: string[], userId?: string) => {
     const event = await prisma.newsEvent.findUnique({
       where: { id: eventId },
       include: { articles: { include: { source: true, analyses: { orderBy: { createdAt: 'desc' }, take: 1 } }, orderBy: { publishedAt: 'desc' } } },
@@ -216,8 +216,6 @@ export const comparisonGenerationService = {
     }
     if (articles.length < 2) throw new AppError('At least two event articles are required for comparison.', 409);
 
-    const analyses = new Map<string, any>();
-    for (const article of articles) analyses.set(article.id, await ensureAnalysis(article));
     const pairs: Array<[any, any]> = [];
     for (let left = 0; left < articles.length; left += 1) {
       for (let right = left + 1; right < articles.length; right += 1) {
@@ -225,6 +223,18 @@ export const comparisonGenerationService = {
       }
     }
     if (!pairs.length) throw new AppError('This event needs articles from at least two distinct sources.', 409);
+
+    const analyses = new Map<string, any>();
+    for (const article of articles) analyses.set(article.id, await ensureAnalysis(article));
+    if (userId) {
+      for (const article of articles) {
+        const priorHistory = await prisma.analysisHistory.findFirst({
+          where: { userId, articleId: article.id, comparisonId: null },
+          select: { id: true },
+        });
+        if (!priorHistory) await prisma.analysisHistory.create({ data: { userId, articleId: article.id } });
+      }
+    }
 
     const comparisons = [];
     for (const [first, second] of pairs) {
@@ -236,6 +246,7 @@ export const comparisonGenerationService = {
           eventId: event.id,
           articleAId: articleA.id,
           articleBId: articleB.id,
+          ...(userId ? { userId } : {}),
           headlineComparison: generated.payload.headlineComparison as any,
           framingContrast: generated.framingContrast as any,
           quoteComparison: generated.quoteComparison as any,
@@ -276,6 +287,13 @@ export const comparisonGenerationService = {
         },
         include: { articleA: { include: { source: true } }, articleB: { include: { source: true } }, event: true },
       });
+      if (userId) {
+        const priorHistory = await prisma.analysisHistory.findFirst({
+          where: { userId, comparisonId: row.id },
+          select: { id: true },
+        });
+        if (!priorHistory) await prisma.analysisHistory.create({ data: { userId, comparisonId: row.id } });
+      }
       comparisons.push(hydrateComparison(row));
     }
     return { eventId: event.id, eventTitle: event.title, eventDate: event.eventDate, comparisons };

@@ -111,6 +111,29 @@ describe('News Domain API Endpoints (/api/v1)', () => {
         .set('Authorization', `Bearer ${token}`).send({});
       expect(regularUser.status).toBe(403);
     });
+
+    it('requires sign-in to persist an article analysis', async () => {
+      const response = await request(app).post('/api/v1/articles/art-1/analyze');
+      expect(response.status).toBe(401);
+    });
+
+    it('requires sign-in to run a stored-article batch analysis', async () => {
+      const response = await request(app).post('/api/v1/articles/analyze/batch').send({ articleIds: ['art-1'] });
+      expect(response.status).toBe(401);
+    });
+
+    it('rejects duplicate IDs in an authenticated analysis batch', async () => {
+      const token = signToken({ userId: 'user-1', email: 'user@example.com', role: 'USER' });
+      const response = await request(app).post('/api/v1/articles/analyze/batch')
+        .set('Authorization', `Bearer ${token}`).send({ articleIds: ['art-1', 'art-1'] });
+      expect(response.status).toBe(400);
+      expect(response.body.error.code).toBe('VALIDATION_ERROR');
+    });
+
+    it('requires sign-in to create a comparison history record', async () => {
+      const response = await request(app).post('/api/v1/events/evt-1/compare').send({});
+      expect(response.status).toBe(401);
+    });
   });
 
   describe('GET /api/v1/articles', () => {
@@ -129,7 +152,7 @@ describe('News Domain API Endpoints (/api/v1)', () => {
       expect(res.body.data.id).toBe('art-1');
     });
 
-    it('POST /api/v1/articles/analyze should return an honest not-connected response', async () => {
+    it('POST /api/v1/articles/analyze should clearly reject URL-only input', async () => {
       const res = await request(app)
         .post('/api/v1/articles/analyze')
         .send({ url: 'https://reuters.com/world/climate-pact-agreement' });

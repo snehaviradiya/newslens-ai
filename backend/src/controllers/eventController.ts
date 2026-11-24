@@ -1,6 +1,7 @@
 // News Events Controller
 
 import { NextFunction, Request, Response } from 'express';
+import { AuthenticatedRequest } from '../middleware/authMiddleware.js';
 import { newsService } from '../services/newsService.js';
 import { compareEventSchema, detectEventsSchema, eventFilterSchema, idParamSchema, paginationQuerySchema } from '../validators/newsValidator.js';
 import { eventDetectionService } from '../services/eventDetectionService.js';
@@ -61,11 +62,11 @@ export const eventController = {
     }
   },
 
-  compare: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  compare: async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
       const { id } = idParamSchema.parse(req.params);
       const input = compareEventSchema.parse(req.body ?? {});
-      const data = await comparisonGenerationService.compareEvent(id, input.articleIds);
+      const data = await comparisonGenerationService.compareEvent(id, input.articleIds, req.user!.userId);
       res.status(200).json({ success: true, data });
     } catch (error) {
       next(error);

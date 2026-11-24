@@ -3,6 +3,7 @@ jest.mock('../src/utils/prisma.js', () => ({
     newsEvent: { findUnique: jest.fn() },
     articleAnalysis: { upsert: jest.fn() },
     articleComparison: { upsert: jest.fn() },
+    analysisHistory: { findFirst: jest.fn(), create: jest.fn() },
   },
 }));
 
@@ -23,6 +24,28 @@ describe('evidence-grounded comparison generation', () => {
     prismaMock.newsEvent.findUnique.mockResolvedValue({ id: 'event-1', articles: [] });
     await expect(comparisonGenerationService.compareEvent('event-1', ['foreign-article', 'other-article']))
       .rejects.toMatchObject({ statusCode: 422 });
+  });
+
+  it('persists a user history link for generated comparisons', async () => {
+    const event = {
+      id: 'event-1', title: 'Storm response', eventDate: new Date('2026-11-24T08:00:00.000Z'),
+      articles: [
+        { id: 'article-a', sourceId: 'source-a', headline: 'City opens shelters after storm', content: 'City opens shelters after the storm. Mayor Lee said people need help.', publishedAt: new Date('2026-11-24T08:00:00Z'), source: { name: 'Outlet A' }, analyses: [{ id: 'analysis-a', entities: [], topics: [], quotes: [], framingScores: {}, supportingEvidence: [] }] },
+        { id: 'article-b', sourceId: 'source-b', headline: 'Storm damages homes as shelters open', content: 'The storm damaged homes. Mayor Lee said the shelters can help residents.', publishedAt: new Date('2026-11-24T08:30:00Z'), source: { name: 'Outlet B' }, analyses: [{ id: 'analysis-b', entities: [], topics: [], quotes: [], framingScores: {}, supportingEvidence: [] }] },
+      ],
+    };
+    prismaMock.newsEvent.findUnique.mockResolvedValue(event);
+    prismaMock.articleComparison.upsert.mockImplementation(async ({ create }: any) => ({
+      ...create, id: 'comparison-1', articleA: event.articles[0], articleB: event.articles[1], event,
+    }));
+    prismaMock.analysisHistory.findFirst.mockResolvedValue(null);
+    prismaMock.analysisHistory.create.mockResolvedValue({ id: 'history-1' });
+
+    const result = await comparisonGenerationService.compareEvent('event-1', undefined, 'user-1');
+    expect(result.comparisons).toHaveLength(1);
+    expect(prismaMock.analysisHistory.create).toHaveBeenCalledWith({
+      data: { userId: 'user-1', comparisonId: 'comparison-1' },
+    });
   });
 
   it('reports shared and unique findings and only returns source-grounded evidence', () => {

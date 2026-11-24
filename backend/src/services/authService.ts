@@ -4,6 +4,7 @@ import { AppError } from '../middleware/errorHandler.js';
 import { hashPassword, comparePassword } from '../utils/password.js';
 import { signToken } from '../utils/jwt.js';
 import { prisma } from '../utils/prisma.js';
+import { env } from '../config/env.js';
 import { RegisterInput, LoginInput } from '../validators/authValidator.js';
 
 export interface SafeUser {
@@ -33,12 +34,13 @@ export const authService = {
     }
 
     const passwordHash = await hashPassword(input.password);
+    const researcherEmails = new Set(env.RESEARCHER_EMAILS.split(',').map((email) => email.trim().toLowerCase()).filter(Boolean));
     const created = await prisma.user.create({
       data: {
         name: input.name.trim(),
         email: normalizedEmail,
         passwordHash,
-        role: (input.role as any) || 'USER',
+        role: researcherEmails.has(normalizedEmail) ? 'RESEARCHER' : 'USER',
       },
     });
 
