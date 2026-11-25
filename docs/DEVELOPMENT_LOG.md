@@ -269,3 +269,29 @@ Build a modular FastAPI service inside `ai-engine/` that reports rule-based text
 ### Remaining Limitations
 - Secure token persistence, physical-device/installed APK verification, live PostgreSQL migration, live RSS ingestion, and a full connected mobile-to-AI-to-database demonstration still need environment access and final verification.
 - Mobile API field mappings have three Jest contract tests in the backend test suite; the mobile app still has no standalone Jest harness.
+
+---
+
+## Day 8: 26 November 2026 — Final Verification & Project Freeze
+
+### Repository and release status
+- Inspected the repository, tracked changes, recent history, and `main` synchronization. The checkout was clean at start; local `main` and `origin/main` both pointed to `d7c6300b924387336bb07923d0b727b48a36fa40`. A direct `git ls-remote` check also returned that same commit for `origin/main`.
+- Existing listeners were observed on ports 3000 and 8000. No duplicate backend or AI-engine process was started. Health requests from this session could not connect to either port.
+- No deployment configuration or verified deployment endpoint is present in the repository. No deployment was attempted or claimed.
+- Expo public configuration resolves for SDK 52, and the EAS profiles request APK output. An APK was not produced: the Android SDK/ADB are not configured, and EAS account/project checks could not reach `api.expo.dev` because DNS/network access was unavailable. An Android JS bundle is not an APK.
+
+### Verification performed
+- Backend: `npm run typecheck`, `npm run build`, and `npm run prisma:validate` — passed.
+- Backend tests: `npm test -- --runInBand` with loopback access — **11 suites and 70 tests passed**. A default sandbox run cannot bind Jest/Supertest to `127.0.0.1`; the permitted loopback rerun succeeded.
+- AI engine: `PYTHONPATH=. .venv/bin/pytest tests -q` — **27 passed** under the repository's Python 3.9 environment.
+- Mobile: `npm run typecheck` — passed.
+- Android Metro export: `npx expo export --platform android --output-dir /private/tmp/newslens-day8-android-export` — passed; this produced an Android JavaScript bundle, not an APK.
+- EAS: Expo configuration rendered successfully. `eas whoami` and `eas project:info` were blocked by DNS resolution failure for Expo's API.
+
+### Integration claims and boundaries
+- Mobile Home, event detail, comparison, article detail, and history flows call the backend API client. The live UI uses returned API records, or displays empty/error states; demo fixtures in `mobile/constants/mockData.ts` are not a live-data fallback.
+- Stored article analysis forwarding/upsert/history, event matching and assignment, evidence-grounded comparison generation/history, API response mapping, and authorization are covered by backend tests. These confirm application-level behavior with test doubles; they do not prove a live PostgreSQL-to-AI-engine run.
+- The database-backed end-to-end flow, live RSS ingestion, installed APK, and deployment remain unverified because the services/database are unreachable from this session and build/deployment access is unavailable.
+- The AI/NLP engine is deterministic and rule-based. It does not use a trained or pretrained AI model. Event detection and article comparison are also deterministic lexical/date heuristics; their output is not semantic proof of framing intent.
+
+The repository is frozen after the final documentation commit on 26 November 2026. No further project edits are planned.

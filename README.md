@@ -114,9 +114,11 @@ The project strictly follows an 8-day development timeline from **19 November 20
 | **23 Nov 2026** | **AI/NLP Engine & Framing Analysis** | FastAPI service, text preprocessing, NER, sentiment, framing classification, and evidence citations. | **Completed** |
 | **24 Nov 2026** | **Related-Event Detection & Comparisons** | Lexical/date-based article grouping and evidence-grounded cross-source comparisons. | Implemented; sandbox-limited API verification |
 | **25 Nov 2026** | **End-to-End Integration & UI Polish** | Mobile-to-backend workflows, saved analysis history, tests, and deployment readiness. | Implemented; live database/APK verification remains |
-| **26 Nov 2026** | **Final Testing, APK, Deployment & Freeze** | Regression testing, Android APK generation, final synchronization, academic submission, and project freeze. | Planned |
+| **26 Nov 2026** | **Final Testing, APK, Deployment & Freeze** | Regression testing, Android APK generation, final synchronization, academic submission, and project freeze. | **Code freeze completed; verification limits recorded in the release-day log** |
 
 > **Final Deadline Note:** No code modifications, feature additions, documentation changes, or git commits are permitted after **26 November 2026**.
+
+The release-day verification record, including test results, APK and deployment blockers, and remaining integration limits, is in [docs/DEVELOPMENT_LOG.md](docs/DEVELOPMENT_LOG.md).
 
 ---
 
